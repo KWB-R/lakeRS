@@ -1,0 +1,23 @@
+Package: lakeRS
+Title: Remote Sensing Lake Data
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Malte", "Zamzow", , "malte.zamzow@kompetenz-wasser.de", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-8748-038X")),
+    person("Kompetenzzentrum Wasser Berlin gGmbH (KWB)", role = "cph")
+  )
+Description: Download and process ESA Sentinel-2 L2A data to obtain
+    trophic state information.
+License: MIT + file LICENSE
+URL: https://github.com/KWB-R/lakeRS
+BugReports: https://github.com/KWB-R/lakeRS/issues
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Suggests: 
+    covr
+Imports: 
+    geosphere,
+    leaflet,
+    ncdf4,
+    openeo

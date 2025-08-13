@@ -5,8 +5,6 @@
 [![CRAN_Status_Badge](https://www.r-pkg.org/badges/version/lakeRS)]()
 [![R-Universe_Status_Badge](https://kwb-r.r-universe.dev/badges/lakeRS)](https://kwb-r.r-universe.dev/)
 
-# lakeRS
-
 Download and process ESA Sentinel-2 L2A data to obtain
 trophic state information.
 
@@ -29,9 +27,3 @@ if (! require("remotes")) {
 # Install KWB package 'lakeRS' from GitHub
 remotes::install_github("KWB-R/lakeRS")
 ```
-
-## Documentation
-
-Release: [https://kwb-r.github.io/lakers](https://kwb-r.github.io/lakers)
-
-Development: [https://kwb-r.github.io/lakers/dev](https://kwb-r.github.io/lakers/dev)
