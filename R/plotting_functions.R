@@ -1,0 +1,108 @@
+#' Plots water scene proportions of each pixel in bounding box
+#' 
+#' @param ncLayer This is a layer that corresponds to the x and y dimensions of
+#' the netCDF file. It can be a band of netCDF or further processed layer
+#' created by [waterscene_proportion()]
+#' @param nc The netCDF data list created by [load_netcdf()]
+#' @param aboveValues Lower limits of value classes. If NULL (default) 
+#' numerical values will be used.
+#' @param aboveColors A vector of colors corresponding to the value
+#' classes. 
+#' @param valueRange Minimum and maximum values used for color scale of numeric 
+#' values.
+#' @param zoom The initial zoom level of the map
+#' @param legendTitle Character string for legend title
+#' @param plotLegend If True legend will be plotted
+#' 
+#' @importFrom raster raster projectExtent projectRaster values
+#' @importFrom leaflet colorFactor colorNumeric leaflet setView addTiles addRasterImage addLegend
+#' 
+#' @export
+#' 
+plot_layer <- function(
+    ncLayer, 
+    nc,
+    aboveValues = NULL,
+    aboveColors = NULL,
+    valueRange = NULL,
+    zoom = 15,
+    legendTitle = NULL,
+    plotLegend = TRUE
+){
+  x <- nc$x
+  y <- nc$y
+  r <- raster::raster(
+    t(ncLayer), 
+    xmn=min(x), 
+    xmx=max(x), 
+    ymn=min(y), 
+    ymx=max(y), 
+    crs = 32633)
+  
+  to_wgs84 <- raster::projectExtent(
+    object = r,
+    crs = "EPSG:4326"
+  )
+  r_wgs84 <- raster::projectRaster(
+    from = r, to = to_wgs84,
+    method = "ngb"
+  )
+
+  if(!is.null(aboveValues)){
+    cuts <- c(aboveValues, max(raster::values(r_wgs84))) #set breaks
+    r_factor <- cut(
+      x = raster::values(r_wgs84), 
+      breaks = cuts, 
+      right = TRUE, 
+      include.lowest = TRUE
+    )
+    raster::values(r_wgs84) <- r_factor
+    pal <- leaflet::colorFactor(palette = aboveColors, 
+                                domain = seq_along(levels(r_factor)))
+  } else {
+    if(is.null(valueRange)){
+      valueRange <- range(raster::values(r_wgs84))
+      valueRange <- valueRange + (diff(valueRange) * c(-0.00001, 0.00001))
+    }
+    pal <- leaflet::colorNumeric(
+      palette = c("white", "black"), 
+      domain = valueRange)
+  }
+ 
+  m <- leaflet::leaflet()
+  m <- leaflet::setView(
+    map = m, 
+    lng = mean(raster::extent(r_wgs84)[1:2]), 
+    lat = mean(raster::extent(r_wgs84)[3:4]), 
+    zoom = zoom
+  )
+  m <- leaflet::addTiles(map = m)
+  m <- leaflet::addRasterImage(
+    map = m, 
+    x = r_wgs84, 
+    colors = pal, 
+    opacity = 0.8
+  )  
+  if(plotLegend){
+    if(!is.null(aboveValues)){
+      legend_i <- seq_along(aboveValues)
+      if(length(aboveValues) > 10){
+        legend_i <- round(seq(1, length(aboveValues), length.out = 10))
+      }
+      m <- leaflet::addLegend(
+        map = m, 
+        colors = aboveColors[legend_i], 
+        labels = levels(r_factor)[legend_i],
+        title = legendTitle)
+    } else {
+      m <- leaflet::addLegend(
+        map = m, 
+        pal = pal, 
+        values = valueRange,
+        title = legendTitle)
+    }
+    
+  }
+  
+  m
+}

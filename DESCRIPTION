@@ -20,4 +20,8 @@ Imports:
     geosphere,
     leaflet,
     ncdf4,
-    openeo
+    openeo,
+    raster
+Depends: 
+    R (>= 2.10)
+LazyData: true
