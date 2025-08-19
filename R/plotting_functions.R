@@ -49,7 +49,7 @@ plot_layer <- function(
   )
 
   if(!is.null(aboveValues)){
-    cuts <- c(aboveValues, max(raster::values(r_wgs84))) #set breaks
+    cuts <- c(aboveValues, max(raster::values(r_wgs84), na.rm = TRUE)) #set breaks
     r_factor <- cut(
       x = raster::values(r_wgs84), 
       breaks = cuts, 
@@ -58,7 +58,8 @@ plot_layer <- function(
     )
     raster::values(r_wgs84) <- r_factor
     pal <- leaflet::colorFactor(palette = aboveColors, 
-                                domain = seq_along(levels(r_factor)))
+                                domain = seq_along(levels(r_factor)), 
+                                na.color = "#00000000")
   } else {
     if(is.null(valueRange)){
       valueRange <- range(raster::values(r_wgs84))
@@ -76,7 +77,8 @@ plot_layer <- function(
     lat = mean(raster::extent(r_wgs84)[3:4]), 
     zoom = zoom
   )
-  m <- leaflet::addTiles(map = m)
+  m <- leaflet::addProviderTiles(map = m, provider = "OpenStreetMap.Mapnik")
+  #m <- leaflet::addTiles(map = m, layerId = "Esri.WorldTopoMap")
   m <- leaflet::addRasterImage(
     map = m, 
     x = r_wgs84, 
@@ -91,6 +93,7 @@ plot_layer <- function(
       }
       m <- leaflet::addLegend(
         map = m, 
+        #pal = pal,
         colors = aboveColors[legend_i], 
         labels = levels(r_factor)[legend_i],
         title = legendTitle)

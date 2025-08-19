@@ -257,13 +257,7 @@ if(FALSE){
   )
   
   
-  # Class results
-  ndtri_classes <- get_ndtri_classes(yearly_spread = yearly_spread, n_classes = 10)
-  
-  df_class <- EO_assessment_class <- do.call(cbind, list(
-    yearly_spread, 
-    ndtri_classes$yearly_classes,  
-    ndtri_classes$yearly_colors))
+
   
   
   plot_ndtri_status(EO_assessment = EO_assessment_ndtri, lake_names = lake_name)

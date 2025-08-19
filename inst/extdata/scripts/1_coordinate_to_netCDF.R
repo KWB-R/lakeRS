@@ -3,19 +3,20 @@ library(openeo)
 eodc <- connect(host = "https://openeo.dataspace.copernicus.eu/openeo/1.2")
 login()
 
-lakeName <- "Brandiser Badesee"
-lakeID <- NULL
+lakeName <- "Großer Stechlinsee"
+lakeID <- "800015815219"
 tBeg <- "2018-01-01"
 tEnd <- "2024-12-31"
-lat <- 13.168516
-lon <- 51.790693
-outputPath <- "C:/Users/mzamzo/Documents/AD4GD/remote_sensing/input"
+lat <- 13.022880
+lon <- 53.153596
+RSPath <- "C:/Users/mzamzo/Documents/themen/RS"
+
 
 # prepare bounding box
 bbox <- lakeRS::bbox_from_point(
   lon = lon,
   lat = lat, 
-  meters = 300
+  meters = 2000
 )
 lakeRS::display_bbox(bbox = bbox)
 
@@ -27,6 +28,6 @@ jobTitle <- lakeRS::start_openEO_job(
 )
 lakeRS::download_openEO_job(
   title = jobTitle, 
-  path = outputPath
+  path = file.path(RSPath, "input")
 )
 

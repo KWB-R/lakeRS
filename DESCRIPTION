@@ -17,11 +17,14 @@ RoxygenNote: 7.3.2
 Suggests: 
     covr
 Imports: 
+    tidyr,
     geosphere,
+    htmltools,
+    htmlwidgets,
     leaflet,
     ncdf4,
     openeo,
     raster
 Depends: 
-    R (>= 2.10)
+    R (>= 4.0.0)
 LazyData: true
