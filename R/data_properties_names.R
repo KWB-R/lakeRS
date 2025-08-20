@@ -6,3 +6,11 @@
 #' colors
 #' 
 "NDTrIColors"
+
+#' Colors for the Classes
+#' 
+#' 
+#' @format A dataframe of two columns. "class" listing the classes 1 to 10and 
+#' "color" specifying the correspondingcolors
+#' 
+"tenClassColors"

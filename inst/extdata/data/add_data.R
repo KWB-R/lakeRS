@@ -1,4 +1,5 @@
 # 1. write data and save as .rda file in the package/data folder
+# --> can be done by usethis::use_data()
 # (the filename should be the same as the variable name)
 
 # 2. add the variable to the global variables of the package in the
@@ -10,7 +11,7 @@
 # NULL can be assigned to the documentation to avoid the devtools warning
 # message "Variables with usage in documentation ... but not in code"
 
-
+# Trophic colors
 oligo <- rgb(0, 51, 153, maxColorValue = 255)
 meso1 <- rgb(0, 176, 240, maxColorValue = 255)
 meso2 <- rgb(102, 153, 0, maxColorValue = 255)
@@ -51,3 +52,21 @@ for(i in 2:length(col_defined)){
 }
 
 usethis::use_data(NDTrIColors, overwrite = TRUE)
+
+# Class Colors -----------------------------------------------------------------
+tenClassColors <- data.frame(
+  "class" = 1:10,
+  "color" = c(
+    rgb(94,79,162, maxColorValue = 255),
+    rgb(50,136,189, maxColorValue = 255),
+    rgb(102,194,164, maxColorValue = 255),
+    rgb(171,221,164, maxColorValue = 255),
+    rgb(230,245,152, maxColorValue = 255),
+    rgb(254,224,139, maxColorValue = 255),
+    rgb(253,174,94, maxColorValue = 255),
+    rgb(244,109,67, maxColorValue = 255),
+    rgb(213,62,79, maxColorValue = 255),
+    rgb(158,1,66, maxColorValue = 255)
+  ))
+
+usethis::use_data(tenClassColors, overwrite = TRUE)

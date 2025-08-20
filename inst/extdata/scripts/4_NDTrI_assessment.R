@@ -8,10 +8,22 @@ yearly_spread <- lakeRS::ndtri_spread(
   aggregationType = "modus"
 )
 
+outputN <- lakeRS::EO_assessment_numeric(
+  yearly_spread = yearly_spread, 
+  statusYears = 3, 
+  shortTermYears = 3, 
+  longTermYears = 10
+)
+outputC <- lakeRS::EO_assessment_class(
+  yearly_spread = yearly_spread, 
+  nClass = 10
+)
 
-outputN <- lakeRS::EO_assessment_numeric(yearly_spread = yearly_spread)
-outputC <- lakeRS::EO_assessment_class(yearly_spread = yearly_spread)
+lakeRS::plot_numeric_assessment(
+  numeric_assessment = outputN, 
+  lakeName = "Körbaer Teich"
+)
 
-
-lakeRS::plot_numeric_assessment(numeric_assessment = outputN, lakeName = "Körbaer Teich")
-outputN$periods
+lakeRS::plot_class_assessment(
+  class_assessment = class_assessment, 
+  rowNumbers = 1:3)
