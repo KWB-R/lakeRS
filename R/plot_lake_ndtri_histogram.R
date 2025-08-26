@@ -7,10 +7,17 @@
 #'
 #' @export
 #' 
-plot_lake_ndtri_histogram <- function(ndtriLake, year){
+plot_lake_ndtri_histogram <- function(
+    ndtriLake, year
+){
+  
   lakeName <- ndtriLake$lakeInfo[1]
   lakeID <- ndtriLake$lakeInfo[2]
   y <- ndtriLake[[paste0("y", year)]]
+  if(y$nValidPixel == 0L){
+    stop("No valid pixel values for ", lakeName, " in ", year)
+  }
+  
   d <- y$density
   nBreaks <- if(y$nValidPixel > 50){
     y$nValidPixel/10

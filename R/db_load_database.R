@@ -1,6 +1,6 @@
 #' Load a database table
 #' 
-#' @param RSPath Path of remoate sensing input and output folders
+#' @param ndtriPath Path of the NDTrI data which includes the _database folder 
 #' @param dbName Character string
 #' 
 #' @return 
@@ -8,8 +8,8 @@
 #' 
 #' @export
 #' 
-load_database <- function(RSPath, dbName){
-  dp <- file.path(RSPath, "output", "_database")
+load_database <- function(ndtriPath, dbName){
+  dp <- file.path(ndtriPath, "_database")
   all_db <- dir(dp)
   if(paste0(dbName, ".csv") %in% dir(dp)){
     read.csv(

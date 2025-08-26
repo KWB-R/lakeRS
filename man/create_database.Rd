@@ -4,10 +4,11 @@
 \alias{create_database}
 \title{Creates a new database table}
 \usage{
-create_database(RSPath, included_folders, dbName)
+create_database(ndtriPath, included_folders, dbName)
 }
 \arguments{
-\item{RSPath}{Path of remoate sensing input and output folders}
+\item{ndtriPath}{Path of the NDTrI data which includes all the assessed lakes
+as folders}
 
 \item{included_folders}{Subfolders or the output folder which are part of the
 new databse}

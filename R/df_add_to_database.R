@@ -1,6 +1,7 @@
 #' Add a new lake to the database
 #' 
-#' @param RSPath Path of remoate sensing input and output folders
+#' @param ndtriPath Path of the NDTrI data which includes all the assessed lakes 
+#' as folders
 #' @param dbName Name of the dabase
 #' @param folder A folder Name of the data to be added.  On of folder or df 
 #' needs to be defined
@@ -11,14 +12,12 @@
 #' 
 #' @export
 #' 
-add_to_database <- function(RSPath,  dbName, folder = NULL, df = NULL){
-  op <- file.path(RSPath, "output")
-
-  db <- load_database(RSPath = RSPath, dbName = dbName)
+add_to_database <- function(ndtriPath,  dbName, folder = NULL, df = NULL){
+  db <- load_database(ndtriPath = ndtriPath, dbName = dbName)
   
   if(!is.null(folder)){
     lake_data <- read.csv(
-      file = file.path(op, folder, "_summary.csv"),
+      file = file.path(ndtriPath, folder, "_summary.csv"),
       header = TRUE, 
       sep = ";",
       dec = "."
@@ -43,7 +42,7 @@ add_to_database <- function(RSPath,  dbName, folder = NULL, df = NULL){
   
   write.table(
     x = output, 
-    file = file.path(op, "_database", paste0(dbName, ".csv")), 
+    file = file.path(ndtriPath, "_database", paste0(dbName, ".csv")), 
     sep = ";", dec = ".", row.names = FALSE)
   
   output

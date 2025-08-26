@@ -6,6 +6,8 @@
 #' @param nc The netCDF data list created by [load_netcdf()]
 #' @param aboveValues Lower limits of value classes. If NULL (default) 
 #' numerical values will be used.
+#' @param highestValue If Null the highest value is derived by the maximum of
+#' all available layer values. It can also be specified manually.
 #' @param aboveColors A vector of colors corresponding to the value
 #' classes. 
 #' @param valueRange Minimum and maximum values used for color scale of numeric 
@@ -23,21 +25,34 @@ plot_layer <- function(
     ncLayer, 
     nc,
     aboveValues = NULL,
+    highestValue = NULL,
     aboveColors = NULL,
     valueRange = NULL,
     zoom = 15,
     legendTitle = NULL,
     plotLegend = TRUE
 ){
-  x <- nc$x
-  y <- nc$y
+  if(all(is.na(ncLayer))){
+    stop("No available data for this layer -> All values are NA")
+  }
+  # x <- nc$x
+  # y <- nc$y
   r <- raster::raster(
-    t(ncLayer), 
-    xmn=min(x), 
-    xmx=max(x), 
-    ymn=min(y), 
-    ymx=max(y), 
-    crs = 32633)
+    x = ncLayer, 
+    xmn = min(nc$x),
+    xmx = max(nc$x),
+    ymn = min(nc$y),
+    ymx = max(nc$y),
+    crs = raster::crs(nc$crs))
+  
+  # 
+  # r <- raster::raster(
+  #   t(ncLayer), 
+  #   xmn=min(x), 
+  #   xmx=max(x), 
+  #   ymn=min(y), 
+  #   ymx=max(y), 
+  #   crs = 32633)
   
   to_wgs84 <- raster::projectExtent(
     object = r,
@@ -49,7 +64,10 @@ plot_layer <- function(
   )
 
   if(!is.null(aboveValues)){
-    cuts <- c(aboveValues, max(raster::values(r_wgs84), na.rm = TRUE)) #set breaks
+    if(is.null(highestValue)){
+      highestValue <- max(raster::values(r_wgs84), na.rm = TRUE)
+    }
+    cuts <- c(aboveValues, highestValue) #set breaks
     r_factor <- cut(
       x = raster::values(r_wgs84), 
       breaks = cuts, 

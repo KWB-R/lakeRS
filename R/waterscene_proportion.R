@@ -1,7 +1,7 @@
 #' Proprtions of all scenes and dervied water scene proportion
 #'
-#' @param scl_image The SCL layer of the imagewise data, created by 
-#' [data_per_image()]              
+#' @param scl_image The SCL layer of the image-wise data, created by 
+#' [ndtri_per_image()] or a similar data per pixel function              
 #' 
 #' @details
 #' The water proportion is defined as all pixels that are "correctly" classified

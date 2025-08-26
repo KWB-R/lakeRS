@@ -81,8 +81,8 @@ determine_classes <- function(yearly_spread, nClass = 10){
     year_i <- yearly_spread[,i]
     breaks <- c(
       -1,
-      seq(from = quantile(year_i, probs = upperLowerLimit), 
-          to = quantile(year_i, probs = 1 - upperLowerLimit), 
+      seq(from = quantile(year_i, probs = upperLowerLimit, na.rm = TRUE), 
+          to = quantile(year_i, probs = 1 - upperLowerLimit, na.rm = TRUE), 
           length.out = nClass - 1), 
       1)
     list(

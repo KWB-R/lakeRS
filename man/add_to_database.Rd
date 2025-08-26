@@ -4,10 +4,11 @@
 \alias{add_to_database}
 \title{Add a new lake to the database}
 \usage{
-add_to_database(RSPath, dbName, folder = NULL, df = NULL)
+add_to_database(ndtriPath, dbName, folder = NULL, df = NULL)
 }
 \arguments{
-\item{RSPath}{Path of remoate sensing input and output folders}
+\item{ndtriPath}{Path of the NDTrI data which includes all the assessed lakes
+as folders}
 
 \item{dbName}{Name of the dabase}
 

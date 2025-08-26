@@ -4,20 +4,17 @@
 \alias{load_netcdf}
 \title{Function loads a netCDF file and imports all the important information for NDTrI}
 \usage{
-load_netcdf(title, path, fileName = "openEO.nc", loadAllVars = TRUE)
+load_netcdf(filePath, fileName = "openEO.nc", vars = c("B02", "B05", "SCL"))
 }
 \arguments{
-\item{title}{Character string. The same title that has been used to start the
-job by function \code{\link[=start_openEO_job]{start_openEO_job()}}.}
-
-\item{path}{the path of the netCDF file}
+\item{filePath}{the path of the netCDF file}
 
 \item{fileName}{The file name including .nc ending. By default openEO
 provides a file that is named "openEO.nc"}
 
-\item{loadAllVars}{If TRUE (default) all available variable layers will be
-loaded into the output list. Otherwise only bands relevant for the NDTrI will
-be loaded.}
+\item{vars}{A character defining the variables of the netcdf to be loaded.
+The default is B02, B05 and SCL which are needed for NDTrI calculation.
+If "all" is specified, all available variables are loaded.}
 }
 \value{
 Returns a list of spatial and temporal variables and all the other layers of

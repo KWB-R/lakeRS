@@ -1,6 +1,7 @@
 #' Creates a new database table
 #' 
-#' @param RSPath Path of remoate sensing input and output folders
+#' @param ndtriPath Path of the NDTrI data which includes all the assessed lakes 
+#' as folders
 #' @param included_folders Subfolders or the output folder which are part of the
 #' new databse
 #' @param dbName Character string
@@ -10,11 +11,10 @@
 #' 
 #' @export
 #' 
-create_database <- function(RSPath, included_folders, dbName){
-  op <- file.path(RSPath, "output")
+create_database <- function(ndtriPath, included_folders, dbName){
   output <- lapply(included_folders, function(f){
     read.csv(
-      file = file.path(op, f, "_summary.csv"),
+      file = file.path(ndtriPath, f, "_summary.csv"),
       header = TRUE, 
       sep = ";",
       dec = "."
@@ -22,7 +22,7 @@ create_database <- function(RSPath, included_folders, dbName){
   })
   
   output <- do.call(rbind, output)
-  dp <- file.path(op, "_database")
+  dp <- file.path(ndtriPath, "_database")
   if(!dir.exists(dp)){
     dir.create(dp)
   }

@@ -2,12 +2,13 @@
 #' 
 #' Maps are saved as .html file, plots as .png, R objects as .rds and a 
 #' summary is saved as csv table. The folder where data is saved is a subfolder
-#' of RSPath/output and is named by a combination of lake name and lake ID.
+#' of the defined outputPath and is named by a combination of lake name and lake 
+#' ID.
 #' 
-#' @param RSPath The path of the Remote Sensing data. One level above input
+#' @param outputPath The path of the Remote Sensing data. One level above input
 #' and output folder
 #' @param nc The netCDF data list created by [load_netcdf()]
-#' @param ncImage the data list created by [data_per_image()]
+#' @param ncImage the data list created by [ndtri_per_image()]
 #' @param sceneProportion A list of the proportions of different scene, created
 #' by [waterscene_proportion()]
 #' @param ndtriPixels A list of NDTrI per pixel of one or more years, created by
@@ -22,9 +23,9 @@
 #' @export
 #' 
 save_lake_data <- function(
-    RSPath, nc, ncImage, sceneProportion, ndtriPixels, ndtriLake, save_plots = TRUE
+    outputPath, nc, ncImage, sceneProportion, ndtriPixels, ndtriLake, save_plots = TRUE
 ){
-  op <- file.path(RSPath, "output", paste0(ndtriPixels$lakeInfo, collapse = "_"))
+  op <- file.path(outputPath, paste0(ndtriPixels$lakeInfo, collapse = "_"))
   
   if(dir.exists(op)){
     existing_files <- dir(op)
@@ -45,13 +46,12 @@ save_lake_data <- function(
   if(save_plots){
     
     # Water scene
-    sceneProportion <- lakeRS::waterscene_proportion(scl_image = ncImage[["SCL"]])
-    
     lakeRS::save_leaflet(
       x = lakeRS::plot_layer(
         ncLayer = sceneProportion$water, 
         nc = nc, 
         aboveValues = c(0,0.3, 0.5, 0.7, 0.8, 0.9), 
+        highestValue = 1,
         aboveColors = c("white","gray", "lightgreen","forestgreen",
                         "steelblue", "darkblue"), 
         legendTitle = "Water Scene Proportion"
@@ -62,28 +62,33 @@ save_lake_data <- function(
     # NDTrI Pixel maps
     for(year in years){
       if(!(paste0("NDTrI_", year, ".html") %in% existing_files)){
-        lakeRS::save_leaflet(
-          x = lakeRS::plot_layer(
-            ncLayer = ndtriPixels[[paste0("y", year)]]$NDTrI, 
-            nc = nc, 
-            aboveValues = lakeRS::NDTrIColors$ndtri, 
-            aboveColors = lakeRS::NDTrIColors$color, 
-            plotLegend = TRUE, 
-            legendTitle = "NDTrI per Pixel", 
-            zoom = 15
-          ),
-          file = file.path(op, paste0("NDTrI_", year, ".html"))
-        )
+        if(ndtriLake[[paste0("y", year)]]$nValidPixel > 0L){
+          lakeRS::save_leaflet(
+            x = lakeRS::plot_layer(
+              ncLayer = ndtriPixels[[paste0("y", year)]]$NDTrI, 
+              nc = nc, 
+              aboveValues = lakeRS::NDTrIColors$ndtri, 
+              highestValue = 1.0000000001,
+              aboveColors = lakeRS::NDTrIColors$color, 
+              plotLegend = TRUE, 
+              legendTitle = "NDTrI per Pixel", 
+              zoom = 15
+            ),
+            file = file.path(op, paste0("NDTrI_", year, ".html"))
+          )
+        }
       }
     }
     
     # Histrograms
     for(year in years){
       if(!(paste0("NDTrI_histogram_", year, ".png") %in% existing_files)){
-        png(filename = file.path(op, paste0("NDTrI_histogram_", year, ".png")), 
-            width = 8, height = 6, units = "in", res = 300)
-        plot_lake_ndtri_histogram(ndtriLake = ndtriLake, year = year)
-        dev.off()
+        if(ndtriLake[[paste0("y", year)]]$nValidPixel > 0L){
+          png(filename = file.path(op, paste0("NDTrI_histogram_", year, ".png")), 
+              width = 8, height = 6, units = "in", res = 300)
+          plot_lake_ndtri_histogram(ndtriLake = ndtriLake, year = year)
+          dev.off()
+        }
       }
     }
   }

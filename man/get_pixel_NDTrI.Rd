@@ -17,7 +17,7 @@ get_pixel_NDTrI(
 \arguments{
 \item{nc}{The netCDF data list created by \code{\link[=load_netcdf]{load_netcdf()}}}
 
-\item{ncImage}{the data list created by \code{\link[=data_per_image]{data_per_image()}}}
+\item{ncImage}{the data list created by \code{\link[=ndtri_per_image]{ndtri_per_image()}}}
 
 \item{years}{Numeric vector of all the years to be assed}
 

@@ -8,6 +8,7 @@ plot_layer(
   ncLayer,
   nc,
   aboveValues = NULL,
+  highestValue = NULL,
   aboveColors = NULL,
   valueRange = NULL,
   zoom = 15,
@@ -24,6 +25,9 @@ created by \code{\link[=waterscene_proportion]{waterscene_proportion()}}}
 
 \item{aboveValues}{Lower limits of value classes. If NULL (default)
 numerical values will be used.}
+
+\item{highestValue}{If Null the highest value is derived by the maximum of
+all available layer values. It can also be specified manually.}
 
 \item{aboveColors}{A vector of colors corresponding to the value
 classes.}

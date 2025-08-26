@@ -5,7 +5,7 @@
 \title{Save or update data of the lake}
 \usage{
 save_lake_data(
-  RSPath,
+  outputPath,
   nc,
   ncImage,
   sceneProportion,
@@ -15,12 +15,12 @@ save_lake_data(
 )
 }
 \arguments{
-\item{RSPath}{The path of the Remote Sensing data. One level above input
+\item{outputPath}{The path of the Remote Sensing data. One level above input
 and output folder}
 
 \item{nc}{The netCDF data list created by \code{\link[=load_netcdf]{load_netcdf()}}}
 
-\item{ncImage}{the data list created by \code{\link[=data_per_image]{data_per_image()}}}
+\item{ncImage}{the data list created by \code{\link[=ndtri_per_image]{ndtri_per_image()}}}
 
 \item{sceneProportion}{A list of the proportions of different scene, created
 by \code{\link[=waterscene_proportion]{waterscene_proportion()}}}
@@ -36,5 +36,6 @@ by \code{\link[=waterscene_proportion]{waterscene_proportion()}}}
 \description{
 Maps are saved as .html file, plots as .png, R objects as .rds and a
 summary is saved as csv table. The folder where data is saved is a subfolder
-of RSPath/output and is named by a combination of lake name and lake ID.
+of the defined outputPath and is named by a combination of lake name and lake
+ID.
 }

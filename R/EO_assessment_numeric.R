@@ -100,9 +100,10 @@ determine_status <- function(
 #' 
 #' @details
 #' In order to rule out systematic errors based on weather conditions in a year,
-#' different hardware or algorithms, the difference between the overall median value
-#' of all lakes and years and the yearly median value of all lakes is added to the 
-#' NDTrI of a lake before the trends are calculated.
+#' different hardware or algorithms, the difference between the overall median 
+#' value of all lakes and years and the yearly median value of all lakes is 
+#' added to the NDTrI of a lake before the trends are calculated. Median values
+#' are only based on lakes for which data is available in all years.
 #' Subsequantially, the trend is calculated as linear regression between previous
 #' years and adjusted NDTrI values.
 #' For a reliable trend assessment the number of lakes needs to be large enough 
@@ -125,8 +126,10 @@ determine_trend <- function(yearly_spread = yearly_spread, shortTerm = 3, longTe
                               x = colnames(yearly_spread))
   
   mat <- as.matrix(yearly_spread[,single_year_columns])
-  overall_median <- median(mat)
-  yearly_medians <- apply(mat, 2, median)
+  all_years_available <- apply(mat, 1, function(x)(all(!is.na(x))))
+  
+  overall_median <- median(mat[all_years_available,])
+  yearly_medians <- apply(mat[all_years_available,], 2, median)
   yearly_shift <- overall_median - yearly_medians
   
   if(shortTerm > ncol(mat)){
@@ -144,26 +147,37 @@ determine_trend <- function(yearly_spread = yearly_spread, shortTerm = 3, longTe
   
   
   output <- t(sapply(1:nrow(mat), function(i){
-    dfs <- data.frame(
-      "Year" = colnames(shortTermMat),
-      "NDTrI" = shortTermMat[i,],
-      "NDTrI_adjusted" = shortTermMat[i,] + yearly_shift[shortTermColumns],
-      "years_passed" = -(shortTerm - 1):0
-    )
-    dfl <- data.frame(
-      "Year" = colnames(longTermMat),
-      "NDTrI" = longTermMat[i,],
-      "NDTrI_adjusted" = longTermMat[i,] + yearly_shift[longTermColumns],
-      "years_passed" = -(longTerm - 1):0
-    )
-    
-    st <- summary(lm(NDTrI_adjusted ~ years_passed, data = dfs))
-    lt <- summary(lm(NDTrI_adjusted  ~ years_passed, data = dfl))
-    
-    c("trend_short" = st$coefficients[2,1],
-      "error_short" = st$coefficients[2,2],
-      "trend_long" = lt$coefficients[2,1],
-      "error_long" = lt$coefficients[2,2])
+    c_short <- 
+      if(any(is.na(shortTermMat[i,]))){
+      c("trend_short" = NA,
+        "error_short" = NA)
+    } else {
+      dfs <- data.frame(
+        "Year" = colnames(shortTermMat),
+        "NDTrI" = shortTermMat[i,],
+        "NDTrI_adjusted" = shortTermMat[i,] + yearly_shift[shortTermColumns],
+        "years_passed" = -(shortTerm - 1):0
+      )
+      st <- summary(lm(NDTrI_adjusted ~ years_passed, data = dfs))
+      c("trend_short" = st$coefficients[2,1],
+        "error_short" = st$coefficients[2,2])
+    }
+    c_long <- 
+      if(any(is.na(longTermMat[i,]))){
+        c("trend_long" = NA,
+          "error_long" = NA)
+      } else {
+        dfl <- data.frame(
+          "Year" = colnames(longTermMat),
+          "NDTrI" = longTermMat[i,],
+          "NDTrI_adjusted" = longTermMat[i,] + yearly_shift[longTermColumns],
+          "years_passed" = -(longTerm - 1):0
+        )
+        lt <- summary(lm(NDTrI_adjusted  ~ years_passed, data = dfl))
+        c("trend_long" = lt$coefficients[2,1],
+          "error_long" = lt$coefficients[2,2])
+      }
+    c(c_short, c_long)
   }))
   
   list("trends" = output,

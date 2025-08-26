@@ -17,13 +17,13 @@ plot_numeric_assessment <- function(
 ){
   assessment_df <- numeric_assessment$assessment
   r <-
-  if(!is.null(rowNumber)){
-    rowNumber
-  } else if(!is.null(lakeName)){
-    which(assessment_df$lakeName == lakeName)
-  } else if(!is.null(lakeID)){
-    which(assessment_df$lakeID == lakeID)
-  }
+    if(!is.null(rowNumber)){
+      rowNumber
+    } else if(!is.null(lakeName)){
+      which(assessment_df$lakeName == lakeName)
+    } else if(!is.null(lakeID)){
+      which(assessment_df$lakeID == lakeID)
+    }
   
   df_plot <- assessment_df[r,]
   status_columns <- grep(pattern = "_status$", x = colnames(df_plot))
@@ -34,7 +34,7 @@ plot_numeric_assessment <- function(
   
   stats <- sapply(X = assessment_df[,single_year_columns], 
                   quantile, 
-                  probs = c(0,0.1, 0.25, 0.5, 0.75, 0.9, 1))
+                  probs = c(0,0.1, 0.25, 0.5, 0.75, 0.9, 1), na.rm = TRUE)
   
   dev.new(noRStudioGD = TRUE, width = 6, height = 4)
   
@@ -43,7 +43,7 @@ plot_numeric_assessment <- function(
          heights = c(0.2, 1))
   par(mar = c(0,0,0,0))
   plot(0,0,type ="n", xaxt = "n", xlab = "", yaxt = "n", ylab = "", bty = "n")
-  text(x = 0, y = 0, df_plot$name, cex = 2)
+  text(x = 0, y = 0, df_plot$lakeName, cex = 2)
   
   par(mar = c(4.1, 4.1, 1.1, 1.1))
   plot(x = 1:n_single_years, y = stats[5,], type = "n", 
@@ -64,10 +64,10 @@ plot_numeric_assessment <- function(
   
   points(x = 1:n_single_years,
          y = df_plot[,single_year_columns], 
-         pch = 19)
+         pch = 19, col = "gray40")
   lines(x = 1:n_status_years + n_single_years - n_status_years, 
         y = df_plot[,status_columns], 
-        lwd = 1, lty = "dotted")
+        lwd = 2, lty = "dotted")
   
   axis(side = 1, 
        at = 1:n_single_years, 
@@ -77,7 +77,8 @@ plot_numeric_assessment <- function(
   trendLim <- 
     max(abs(range(
       c(assessment_df$trend_long - 1.96 * assessment_df$error_long,
-        assessment_df$trend_long + 1.96 * assessment_df$error_long)
+        assessment_df$trend_long + 1.96 * assessment_df$error_long),
+      na.rm = TRUE
     ))) * c(-1,1)
   plot(
     x = 0, y = 0, type = "n", ylim = trendLim,
@@ -96,7 +97,8 @@ plot_numeric_assessment <- function(
   trendLim <- 
     max(abs(range(
       c(assessment_df$trend_short - 1.96 * assessment_df$error_short,
-        assessment_df$trend_short + 1.96 * assessment_df$error_short)
+        assessment_df$trend_short + 1.96 * assessment_df$error_short),
+      na.rm = TRUE
     ))) * c(-1,1)
   plot(
     x = 0, y = 0, type = "n", ylim =  trendLim,

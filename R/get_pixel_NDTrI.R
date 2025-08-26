@@ -1,7 +1,7 @@
 #' Calculate the Normalized difference trophic index for a year
 #' 
 #' @param nc The netCDF data list created by [load_netcdf()]
-#' @param ncImage the data list created by [data_per_image()]
+#' @param ncImage the data list created by [ndtri_per_image()]
 #' @param years Numeric vector of all the years to be assed
 #' @param seasonMonths Numeric vector including all months of the growing season
 #' @param water_scenes_only By default only pixels classified as water scene are 

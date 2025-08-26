@@ -4,10 +4,10 @@
 \alias{load_database}
 \title{Load a database table}
 \usage{
-load_database(RSPath, dbName)
+load_database(ndtriPath, dbName)
 }
 \arguments{
-\item{RSPath}{Path of remoate sensing input and output folders}
+\item{ndtriPath}{Path of the NDTrI data which includes the _database folder}
 
 \item{dbName}{Character string}
 }

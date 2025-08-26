@@ -7,8 +7,8 @@
 waterscene_proportion(scl_image)
 }
 \arguments{
-\item{scl_image}{The SCL layer of the imagewise data, created by
-\code{\link[=data_per_image]{data_per_image()}}}
+\item{scl_image}{The SCL layer of the image-wise data, created by
+\code{\link[=ndtri_per_image]{ndtri_per_image()}} or a similar data per pixel function}
 }
 \value{
 A list of 3:

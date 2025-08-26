@@ -1,49 +1,61 @@
 #' Function loads a netCDF file and imports all the important information for NDTrI
 #' 
-#' @param title Character string. The same title that has been used to start the
-#' job by function [start_openEO_job()].
-#' @param path the path of the netCDF file
+#' @param filePath the path of the netCDF file
 #' @param fileName The file name including .nc ending. By default openEO 
 #' provides a file that is named "openEO.nc"
-#' @param loadAllVars If TRUE (default) all available variable layers will be 
-#' loaded into the output list. Otherwise only bands relevant for the NDTrI will
-#' be loaded.
+#' @param vars A character defining the variables of the netcdf to be loaded.
+#' The default is B02, B05 and SCL which are needed for NDTrI calculation.
+#' If "all" is specified, all available variables are loaded.  
 #' 
 #' @return
 #' Returns a list of spatial and temporal variables and all the other layers of 
 #' the data cube.
 #' 
-#' @importFrom ncdf4 nc_open nc_close ncvar_get
+#' @importFrom ncdump NetCDF
+#' @importFrom raster raster crs as.array brick
 #' 
 #' @export
 load_netcdf <- function(
-    title, path, fileName = "openEO.nc", loadAllVars = TRUE
+    filePath, fileName = "openEO.nc", vars = c("B02", "B05", "SCL")
 ){
-  # load and process data
-  nc_data <- ncdf4::nc_open(filename = file.path(path, title,  fileName))  
+  ncMeta <- ncdump::NetCDF(x = file.path(filePath, fileName))
+  availableVars <- ncMeta$variable$name
+  availableVars <- availableVars[availableVars != "crs"]
+  if("all" %in% vars){
+    vars <- availableVars
+  }
+  dimDf <- ncMeta$dimension
+  x_id <-  dimDf$id[dimDf$name == "x"]
+  y_id <-  dimDf$id[dimDf$name == "y"]
+  t_id <-  dimDf$id[dimDf$name == "t"]
   
+  valDf <- ncMeta$dimension_values
   nc <- list()
-  # x, y and t
-  nc[["x"]] <- ncdf4::ncvar_get(nc = nc_data, varid = "x")
-  nc[["y"]] <- ncdf4::ncvar_get(nc = nc_data, varid = "y")
-  nc[["t"]] <- ncdf4::ncvar_get(nc = nc_data, varid = "t")
+  nc[["x"]] <- valDf$vals[valDf$id == x_id]
+  nc[["y"]] <- valDf$vals[valDf$id == y_id]
+  nc[["t"]] <- valDf$vals[valDf$id == t_id]
   nc[["t_date"]] <- as.Date(nc[["t"]], origin = "1990-01-01")
   
-  vars <- if(loadAllVars){
-    grep(
-      pattern = "crs", 
-      x = names(nc_data$var), 
-      value = TRUE, 
-      invert = TRUE
-    )
+  rasterData <- raster::raster(
+    x = file.path(filePath, fileName), 
+    varname = availableVars[1])
+  crsInfo <- raster::crs(rasterData)
+  
+  pixel_per_image <- length(nc[["x"]]) * length(nc[["y"]])
+  if(pixel_per_image < 4000000){
+    for(varName in vars){
+      nc[[varName]] <- raster::as.array(
+        x = raster::brick(
+          x = file.path(filePath, fileName), 
+          varname = varName
+        )
+      )
+    }
+    nc[["crs"]] <- crsInfo
   } else {
-    c("B02", "B05", "SCL")
+    nc <- NULL
+    warning("Number of pixels per image too large.", 
+         " Please use function 'index_from_netcdf()' instead.")
   }
-  for(var_i in vars){
-    nc[[var_i]] <- ncdf4::ncvar_get(nc = nc_data, varid = var_i)
-  }
-  
-  ncdf4::nc_close(nc = nc_data)
-  
   nc
 }

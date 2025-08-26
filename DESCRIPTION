@@ -22,9 +22,9 @@ Imports:
     htmltools,
     htmlwidgets,
     leaflet,
-    ncdf4,
     openeo,
-    raster
+    raster,
+    ncdump
 Depends: 
     R (>= 4.0.0)
 LazyData: true
