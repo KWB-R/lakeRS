@@ -24,12 +24,13 @@ plot_class_assessment <- function(
 
   rowFilter <- 
     c(which(df$lakeName %in% lakeNames | df$lakeID %in% lakeIDs), rowNumbers)
-   n_lakes <- nrow(df_plot)
+  
   if(length(rowFilter) == 0L){
     stop("At least one of 'lakeNames', 'lakeIDs','rowNumbers' must be specified.")
   }
   
-  df_plot <-  df[unique(rowFilter),]
+  df_plot <- df[unique(rowFilter),]
+  n_lakes <- nrow(df_plot)
   
   class_cols <- grep(pattern = "_class$", colnames(df_plot))
   #color_cols <- grep(pattern = "_color$", colnames(df_plot))
@@ -64,7 +65,7 @@ plot_class_assessment <- function(
 #' @importFrom grDevices rgb col2rgb
 #' 
 rescale_classColors <- function(nClass){
-  df_out <- tenClassColors
+  df_out <- lakeRS::tenClassColors
   df_out$class <- as.numeric(df_out$class)
   
   if(nClass < 10){

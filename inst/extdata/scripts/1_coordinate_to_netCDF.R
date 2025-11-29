@@ -6,11 +6,10 @@ login()
 lakeName <- "Großer Stechlinsee"
 lakeID <- "800015815219"
 tBeg <- "2018-01-01"
-tEnd <- "2024-12-31"
+tEnd <- "2025-10-26"
 lat <- 13.022880
 lon <- 53.153596
 RSPath <- "C:/Users/mzamzo/Documents/themen/RS"
-
 
 # prepare bounding box
 bbox <- lakeRS::bbox_from_point(

@@ -14,6 +14,7 @@ load_database <- function(ndtriPath, dbName){
   if(paste0(dbName, ".csv") %in% dir(dp)){
     read.csv(
       file = file.path(dp, paste0(dbName, ".csv")), 
+      colClasses = c("lakeID" = "character"),
       header = TRUE, 
       sep = ";", 
       dec = "."

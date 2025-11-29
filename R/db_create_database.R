@@ -13,12 +13,16 @@
 #' 
 create_database <- function(ndtriPath, included_folders, dbName){
   output <- lapply(included_folders, function(f){
-    read.csv(
-      file = file.path(ndtriPath, f, "_summary.csv"),
-      header = TRUE, 
-      sep = ";",
-      dec = "."
-    )
+    if(file.exists(file.path(ndtriPath, f, "_summary.csv"))){
+      read.csv(
+        file = file.path(ndtriPath, f, "_summary.csv"),
+        header = TRUE, 
+        sep = ";",
+        dec = "."
+      )
+    } else {
+      NULL
+    }
   })
   
   output <- do.call(rbind, output)

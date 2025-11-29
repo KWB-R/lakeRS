@@ -20,13 +20,13 @@ and output folder}
 
 \item{nc}{The netCDF data list created by \code{\link[=load_netcdf]{load_netcdf()}}}
 
-\item{ncImage}{the data list created by \code{\link[=ndtri_per_image]{ndtri_per_image()}}}
+\item{ncImage}{the data list created by \code{\link[=ndi_per_image]{ndi_per_image()}}}
 
 \item{sceneProportion}{A list of the proportions of different scene, created
 by \code{\link[=waterscene_proportion]{waterscene_proportion()}}}
 
 \item{ndtriPixels}{A list of NDTrI per pixel of one or more years, created by
-\code{\link[=get_pixel_NDTrI]{get_pixel_NDTrI()}}}
+\code{\link[=get_pixel_index]{get_pixel_index()}}}
 
 \item{ndtriLake}{A list of NDTrI data per lake of one or more years, created by
 \code{\link[=aggregate_NDTrI]{aggregate_NDTrI()}}}

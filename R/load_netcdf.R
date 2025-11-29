@@ -12,7 +12,7 @@
 #' the data cube.
 #' 
 #' @importFrom ncdump NetCDF
-#' @importFrom raster raster crs as.array brick
+#' @importFrom raster raster crs brick
 #' 
 #' @export
 load_netcdf <- function(
@@ -30,26 +30,29 @@ load_netcdf <- function(
   t_id <-  dimDf$id[dimDf$name == "t"]
   
   valDf <- ncMeta$dimension_values
+  print(paste0("Loading Coordinates and time variables ..."))
   nc <- list()
   nc[["x"]] <- valDf$vals[valDf$id == x_id]
   nc[["y"]] <- valDf$vals[valDf$id == y_id]
   nc[["t"]] <- valDf$vals[valDf$id == t_id]
   nc[["t_date"]] <- as.Date(nc[["t"]], origin = "1990-01-01")
   
+  
+  print("Read CRS information.")
   rasterData <- raster::raster(
     x = file.path(filePath, fileName), 
-    varname = availableVars[1])
+    varname = vars[1], ncols = 1, nrows = 1)
   crsInfo <- raster::crs(rasterData)
+  
   
   pixel_per_image <- length(nc[["x"]]) * length(nc[["y"]])
   if(pixel_per_image < 4000000){
     for(varName in vars){
-      nc[[varName]] <- raster::as.array(
-        x = raster::brick(
+      print(paste0("Loading ", varName, "..."))
+      nc[[varName]] <- raster::brick(
           x = file.path(filePath, fileName), 
           varname = varName
         )
-      )
     }
     nc[["crs"]] <- crsInfo
   } else {

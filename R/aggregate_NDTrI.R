@@ -1,7 +1,7 @@
 #' Aggregation of all pixel NDTrIs into one lake NDTrI
 #' 
 #' @param ndtriPixels A list of NDTrI per pixel of one or more years, created by
-#' [get_pixel_NDTrI()]
+#' [get_pixel_index()]
 #'
 #'
 #' @importFrom stats median sd
@@ -16,7 +16,7 @@ aggregate_NDTrI <- function(ndtriPixels)
   for(N in names(ndtriPixels)){
     output[[N]] <- list()
     
-    mat <- ndtriPixels[[N]]$NDTrI
+    mat <- ndtriPixels[[N]]$RSindex
     if(ndtriPixels[[N]]$validPixel > 1){
       
       d <- stats::density(

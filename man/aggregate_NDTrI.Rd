@@ -8,7 +8,7 @@ aggregate_NDTrI(ndtriPixels)
 }
 \arguments{
 \item{ndtriPixels}{A list of NDTrI per pixel of one or more years, created by
-\code{\link[=get_pixel_NDTrI]{get_pixel_NDTrI()}}}
+\code{\link[=get_pixel_index]{get_pixel_index()}}}
 }
 \description{
 Aggregation of all pixel NDTrIs into one lake NDTrI

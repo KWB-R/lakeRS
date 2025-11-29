@@ -8,11 +8,11 @@
 #' @param outputPath The path of the Remote Sensing data. One level above input
 #' and output folder
 #' @param nc The netCDF data list created by [load_netcdf()]
-#' @param ncImage the data list created by [ndtri_per_image()]
+#' @param ncImage the data list created by [ndi_per_image()]
 #' @param sceneProportion A list of the proportions of different scene, created
 #' by [waterscene_proportion()]
 #' @param ndtriPixels A list of NDTrI per pixel of one or more years, created by
-#' [get_pixel_NDTrI()]
+#' [get_pixel_index()]
 #' @param ndtriLake A list of NDTrI data per lake of one or more years, created by
 #' [aggregate_NDTrI()]
 #' @param save_plots If TRUE all maps and plots are saved.
@@ -65,7 +65,7 @@ save_lake_data <- function(
         if(ndtriLake[[paste0("y", year)]]$nValidPixel > 0L){
           lakeRS::save_leaflet(
             x = lakeRS::plot_layer(
-              ncLayer = ndtriPixels[[paste0("y", year)]]$NDTrI, 
+              ncLayer = ndtriPixels[[paste0("y", year)]]$RSindex, 
               nc = nc, 
               aboveValues = lakeRS::NDTrIColors$ndtri, 
               highestValue = 1.0000000001,

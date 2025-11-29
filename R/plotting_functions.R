@@ -35,8 +35,16 @@ plot_layer <- function(
   if(all(is.na(ncLayer))){
     stop("No available data for this layer -> All values are NA")
   }
-  # x <- nc$x
-  # y <- nc$y
+ 
+  hexValues <- FALSE
+  if(is.character(ncLayer)){
+    if(all(grepl(pattern = "^#", ncLayer))){
+      hexValues <- TRUE
+      COLOR <- ncLayer
+      ncLayer <- matrix(data = 1:length(ncLayer), nrow = nrow(ncLayer), ncol = ncol(ncLayer))
+    }
+  }
+  
   r <- raster::raster(
     x = ncLayer, 
     xmn = min(nc$x),
@@ -44,15 +52,6 @@ plot_layer <- function(
     ymn = min(nc$y),
     ymx = max(nc$y),
     crs = raster::crs(nc$crs))
-  
-  # 
-  # r <- raster::raster(
-  #   t(ncLayer), 
-  #   xmn=min(x), 
-  #   xmx=max(x), 
-  #   ymn=min(y), 
-  #   ymx=max(y), 
-  #   crs = 32633)
   
   to_wgs84 <- raster::projectExtent(
     object = r,
@@ -63,67 +62,91 @@ plot_layer <- function(
     method = "ngb"
   )
 
-  if(!is.null(aboveValues)){
-    if(is.null(highestValue)){
-      highestValue <- max(raster::values(r_wgs84), na.rm = TRUE)
-    }
-    cuts <- c(aboveValues, highestValue) #set breaks
-    r_factor <- cut(
-      x = raster::values(r_wgs84), 
-      breaks = cuts, 
-      right = TRUE, 
-      include.lowest = TRUE
-    )
+  if(hexValues){
+    r_factor <- as.factor(raster::values(r_wgs84))
     raster::values(r_wgs84) <- r_factor
-    pal <- leaflet::colorFactor(palette = aboveColors, 
+    pal <- leaflet::colorFactor(palette = as.vector(COLOR), 
                                 domain = seq_along(levels(r_factor)), 
                                 na.color = "#00000000")
+    
+    m <- leaflet::leaflet()
+    m <- leaflet::setView(
+      map = m, 
+      lng = mean(raster::extent(r_wgs84)[1:2]), 
+      lat = mean(raster::extent(r_wgs84)[3:4]), 
+      zoom = zoom
+    )
+    m <- leaflet::addProviderTiles(map = m, provider = "OpenStreetMap.Mapnik")
+    #m <- leaflet::addTiles(map = m, layerId = "Esri.WorldTopoMap")
+    m <- leaflet::addRasterImage(
+      map = m, 
+      x = r_wgs84, 
+      colors = pal, 
+      opacity = 0.8
+    )
   } else {
-    if(is.null(valueRange)){
-      valueRange <- range(raster::values(r_wgs84))
-      valueRange <- valueRange + (diff(valueRange) * c(-0.00001, 0.00001))
-    }
-    pal <- leaflet::colorNumeric(
-      palette = c("white", "black"), 
-      domain = valueRange)
-  }
- 
-  m <- leaflet::leaflet()
-  m <- leaflet::setView(
-    map = m, 
-    lng = mean(raster::extent(r_wgs84)[1:2]), 
-    lat = mean(raster::extent(r_wgs84)[3:4]), 
-    zoom = zoom
-  )
-  m <- leaflet::addProviderTiles(map = m, provider = "OpenStreetMap.Mapnik")
-  #m <- leaflet::addTiles(map = m, layerId = "Esri.WorldTopoMap")
-  m <- leaflet::addRasterImage(
-    map = m, 
-    x = r_wgs84, 
-    colors = pal, 
-    opacity = 0.8
-  )  
-  if(plotLegend){
     if(!is.null(aboveValues)){
-      legend_i <- seq_along(aboveValues)
-      if(length(aboveValues) > 10){
-        legend_i <- round(seq(1, length(aboveValues), length.out = 10))
+      if(is.null(highestValue)){
+        highestValue <- max(raster::values(r_wgs84), na.rm = TRUE)
       }
-      m <- leaflet::addLegend(
-        map = m, 
-        #pal = pal,
-        colors = aboveColors[legend_i], 
-        labels = levels(r_factor)[legend_i],
-        title = legendTitle)
+      cuts <- c(aboveValues, highestValue) #set breaks
+      r_factor <- cut(
+        x = raster::values(r_wgs84), 
+        breaks = cuts, 
+        right = TRUE, 
+        include.lowest = TRUE
+      )
+      raster::values(r_wgs84) <- r_factor
+      pal <- leaflet::colorFactor(palette = aboveColors, 
+                                  domain = seq_along(levels(r_factor)), 
+                                  na.color = "#00000000")
     } else {
-      m <- leaflet::addLegend(
-        map = m, 
-        pal = pal, 
-        values = valueRange,
-        title = legendTitle)
+      if(is.null(valueRange)){
+        valueRange <- range(raster::values(r_wgs84))
+        valueRange <- valueRange + (diff(valueRange) * c(-0.00001, 0.00001))
+      }
+      pal <- leaflet::colorNumeric(
+        palette = c("white", "black"), 
+        domain = valueRange)
+    }
+    
+    m <- leaflet::leaflet()
+    m <- leaflet::setView(
+      map = m, 
+      lng = mean(raster::extent(r_wgs84)[1:2]), 
+      lat = mean(raster::extent(r_wgs84)[3:4]), 
+      zoom = zoom
+    )
+    m <- leaflet::addProviderTiles(map = m, provider = "OpenStreetMap.Mapnik")
+    #m <- leaflet::addTiles(map = m, layerId = "Esri.WorldTopoMap")
+    m <- leaflet::addRasterImage(
+      map = m, 
+      x = r_wgs84, 
+      colors = pal, 
+      opacity = 0.8
+    )  
+    if(plotLegend){
+      if(!is.null(aboveValues)){
+        legend_i <- seq_along(aboveValues)
+        if(length(aboveValues) > 10){
+          legend_i <- round(seq(1, length(aboveValues), length.out = 10))
+        }
+        m <- leaflet::addLegend(
+          map = m, 
+          #pal = pal,
+          colors = aboveColors[legend_i], 
+          labels = levels(r_factor)[legend_i],
+          title = legendTitle)
+      } else {
+        m <- leaflet::addLegend(
+          map = m, 
+          pal = pal, 
+          values = valueRange,
+          title = legendTitle)
+      }
+      
     }
     
   }
-  
   m
 }

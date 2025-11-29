@@ -14,8 +14,8 @@ in WGS 84 EPSG:4326 (--> Top value is higher than bottom value)}
 rectangle in WGS 84 EPSG:4326 (--> right side value is higher than left side
 value)}
 
-\item{meters}{The distance around the point to create the bounding box.
-Needs to be > 0.}
+\item{meters}{The buffer distance in m around the rectangle to create the
+bounding box (Needs to be > 0)}
 }
 \description{
 Bounding Box from rectangle
