@@ -1,4 +1,7 @@
-#' Plots water scene proportions of each pixel in bounding box
+#' Plots one layer of the netCDF
+#' 
+#' The plot is the layer on top of a leaflet map. The color scheme can
+#' be done for numeric or categorical values.
 #' 
 #' @param ncLayer This is a layer that corresponds to the x and y dimensions of
 #' the netCDF file. It can be a band of netCDF or further processed layer
@@ -15,6 +18,17 @@
 #' @param zoom The initial zoom level of the map
 #' @param legendTitle Character string for legend title
 #' @param plotLegend If True legend will be plotted
+#' 
+#' @details
+#' Use case: Proportions of a scene.
+#' The above values and correspoding colors 
+#' need to be specifiec. If for example values between 0 and 0.5 (50%) should be
+#' white, values between 0.5 and 0.75 should be yellow and values above 0.75 
+#' should be purple, aboveValues are c(0, 0.5, 0.75) and the aboveColors are
+#' c("white", "yellow", "purple"). In that case a legendTitle is recommended to
+#' explain what is displayed.
+#' 
+#' 
 #' 
 #' @importFrom raster raster projectExtent projectRaster values
 #' @importFrom leaflet colorFactor colorNumeric leaflet setView addTiles addRasterImage addLegend
@@ -102,7 +116,7 @@ plot_layer <- function(
                                   na.color = "#00000000")
     } else {
       if(is.null(valueRange)){
-        valueRange <- range(raster::values(r_wgs84))
+        valueRange <- range(raster::values(r_wgs84), na.rm = TRUE)
         valueRange <- valueRange + (diff(valueRange) * c(-0.00001, 0.00001))
       }
       pal <- leaflet::colorNumeric(
@@ -123,7 +137,7 @@ plot_layer <- function(
       map = m, 
       x = r_wgs84, 
       colors = pal, 
-      opacity = 0.8
+      opacity = 1
     )  
     if(plotLegend){
       if(!is.null(aboveValues)){

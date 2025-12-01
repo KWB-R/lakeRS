@@ -5,8 +5,11 @@
 #' @param bandNames A character vector of length 2 defining the sentinel-2
 #' bands. To see what bands are available in the datacube run 'names(nc)'.
 #' The default is "B05" and "B02" which is used for NDTrI calculation.
-#' @param keep_bands If True the band 2, 5 and SCL data is part of the list (as
-#' matrix per image)
+#' @param keep_bands If TRUE the both input bands and SCL data is part of the 
+#' output list (as matrix per image), which can end up in large objects. If NULL 
+#' the input information is not returned. By default ("SCL_only") only the 
+#' the scene classification is part of the output list and can be used for
+#' further image- and pixel-wise filtering.
 #' 
 #' @details
 #' The Index will be calculated by 
@@ -22,33 +25,45 @@
 #' @export
 #' 
 ndi_per_image <- function(
-    nc, bandNames = c("B05", "B02"), keep_bands = FALSE
+    nc, bandNames = c("B05", "B02"), keep_bands = "SCL_only"
 ){
  
   bA_image <- bB_image <- scl_image <- list()
   
   ndi_image <- list()
+  prog <- 0
   for(t_step in seq_along(nc[["t"]])){
-    print(paste0("processing ", t_step, " / ", length(nc[["t"]])))
+    prog2 <- round(t_step / length(nc[["t"]]) * 100)
+    if(prog2 > prog){
+      prog <- prog2
+      cat(paste0(prog, "% processed \n"))
+    }
+    # print(paste0("processing ", t_step, " / ", length(nc[["t"]])))
     
     bAt <- load_bandLayer(nc = nc, bandName = bandNames[1], timeStep = t_step)
     bBt <- load_bandLayer(nc = nc, bandName = bandNames[2], timeStep = t_step)
     sclt <- load_bandLayer(nc = nc, bandName = "SCL", timeStep = t_step)
     sclt[is.na(sclt)] <- 0
     
-    if(keep_bands){
-      bA_image[[t_step]] <- bAt
-      bB_image[[t_step]] <- bBt
+    if(!is.null(keep_bands)){
+      if(keep_bands != "SCL_only"){
+        bA_image[[t_step]] <- bAt
+        bB_image[[t_step]] <- bBt
+      }
       scl_image[[t_step]] <- sclt
     } 
     
     ndi_image[[t_step]] <- (bAt - bBt) / (bAt + bBt) 
   }
   
-  list("B_1" = bA_image,
-       "B_2" = bB_image,
-       "SCL" = scl_image,
-       "RSindex" = ndi_image)
+  output <- list(
+    bA_image,
+    bB_image,
+    scl_image,
+    ndi_image
+  )
+  names(output) <- c(bandNames, "SCL", "RSindex")
+  output
 }
 
 #' Data cube data is sliced according to timesteps, preprocessed and used to

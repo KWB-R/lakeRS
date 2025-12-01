@@ -26,7 +26,7 @@ and output folder}
 by \code{\link[=waterscene_proportion]{waterscene_proportion()}}}
 
 \item{ndtriPixels}{A list of NDTrI per pixel of one or more years, created by
-\code{\link[=get_pixel_index]{get_pixel_index()}}}
+\code{\link[=seasonal_index_per_pixel]{seasonal_index_per_pixel()}}}
 
 \item{ndtriLake}{A list of NDTrI data per lake of one or more years, created by
 \code{\link[=aggregate_NDTrI]{aggregate_NDTrI()}}}

@@ -12,7 +12,7 @@
 #' @param sceneProportion A list of the proportions of different scene, created
 #' by [waterscene_proportion()]
 #' @param ndtriPixels A list of NDTrI per pixel of one or more years, created by
-#' [get_pixel_index()]
+#' [seasonal_index_per_pixel()]
 #' @param ndtriLake A list of NDTrI data per lake of one or more years, created by
 #' [aggregate_NDTrI()]
 #' @param save_plots If TRUE all maps and plots are saved.

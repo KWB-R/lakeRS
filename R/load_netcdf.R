@@ -30,7 +30,7 @@ load_netcdf <- function(
   t_id <-  dimDf$id[dimDf$name == "t"]
   
   valDf <- ncMeta$dimension_values
-  print(paste0("Loading Coordinates and time variables ..."))
+  cat(paste0("Loading Coordinates and time variables ... \n"))
   nc <- list()
   nc[["x"]] <- valDf$vals[valDf$id == x_id]
   nc[["y"]] <- valDf$vals[valDf$id == y_id]
@@ -38,7 +38,7 @@ load_netcdf <- function(
   nc[["t_date"]] <- as.Date(nc[["t"]], origin = "1990-01-01")
   
   
-  print("Read CRS information.")
+  cat("Read CRS information. \n")
   rasterData <- raster::raster(
     x = file.path(filePath, fileName), 
     varname = vars[1], ncols = 1, nrows = 1)
@@ -48,7 +48,7 @@ load_netcdf <- function(
   pixel_per_image <- length(nc[["x"]]) * length(nc[["y"]])
   if(pixel_per_image < 4000000){
     for(varName in vars){
-      print(paste0("Loading ", varName, "..."))
+      cat(paste0("Loading ", varName, "... \n"))
       nc[[varName]] <- raster::brick(
           x = file.path(filePath, fileName), 
           varname = varName

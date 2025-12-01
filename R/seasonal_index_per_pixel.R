@@ -2,7 +2,7 @@
 #' 
 #' @param nc The netCDF data list created by [load_netcdf()]
 #' @param ncImage the data list created by [ndi_per_image()]
-#' @param years Numeric vector of all the years to be assed
+#' @param years Numeric vector of all the years to be assessed
 #' @param seasonMonths Numeric vector including all months of the growing season
 #' @param water_scenes_only By default only pixels classified as water scene are 
 #' used for the yearly average per pixel. If False, all values are included no
@@ -15,7 +15,7 @@
 #' 
 #' @export
 #' 
-get_pixel_index <- function(
+seasonal_index_per_pixel <- function(
     nc, ncImage, years, seasonMonths = 4:10, 
     water_scenes_only = TRUE, pixelQualityThreshold = 0.8, 
     lakeInfo = c("", "")
@@ -65,6 +65,8 @@ get_pixel_index <- function(
   }
   output
 }
+
+
 
 
 #' NDTri per pixel

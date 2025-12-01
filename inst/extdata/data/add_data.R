@@ -70,3 +70,23 @@ tenClassColors <- data.frame(
   ))
 
 usethis::use_data(tenClassColors, overwrite = TRUE)
+
+
+# Cluster Colors -----------------------------------------------------------------
+tenClusterColors <- data.frame(
+  "cluster" = 1:10,
+  "color" = c(
+    rgb(31, 119, 180, maxColorValue = 255),
+    rgb(255, 127, 14, maxColorValue = 255),
+    rgb(44, 160, 44, maxColorValue = 255),
+    rgb(214, 39, 40, maxColorValue = 255),
+    rgb(148, 103, 189, maxColorValue = 255),
+    rgb(140, 86, 75, maxColorValue = 255),
+    rgb(255, 187, 120, maxColorValue = 255),
+    rgb(23, 190, 207, maxColorValue = 255),
+    rgb(227, 119, 194, maxColorValue = 255),
+    rgb(127, 127, 127, maxColorValue = 255)
+  ))
+
+
+usethis::use_data(tenClusterColors, overwrite = TRUE)

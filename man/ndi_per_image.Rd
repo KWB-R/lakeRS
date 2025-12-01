@@ -5,7 +5,7 @@
 \title{data cube data is sliced according to timesteps, preprocessed and used to
 calculate a normalized difference index}
 \usage{
-ndi_per_image(nc, bandNames = c("B05", "B02"), keep_bands = FALSE)
+ndi_per_image(nc, bandNames = c("B05", "B02"), keep_bands = "SCL_only")
 }
 \arguments{
 \item{nc}{The netCDF data list created by \code{\link[=load_netcdf]{load_netcdf()}}}
@@ -14,8 +14,11 @@ ndi_per_image(nc, bandNames = c("B05", "B02"), keep_bands = FALSE)
 bands. To see what bands are available in the datacube run 'names(nc)'.
 The default is "B05" and "B02" which is used for NDTrI calculation.}
 
-\item{keep_bands}{If True the band 2, 5 and SCL data is part of the list (as
-matrix per image)}
+\item{keep_bands}{If TRUE the both input bands and SCL data is part of the
+output list (as matrix per image), which can end up in large objects. If NULL
+the input information is not returned. By default ("SCL_only") only the
+the scene classification is part of the output list and can be used for
+further image- and pixel-wise filtering.}
 }
 \description{
 data cube data is sliced according to timesteps, preprocessed and used to

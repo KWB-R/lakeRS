@@ -2,7 +2,7 @@
 % Please edit documentation in R/plotting_functions.R
 \name{plot_layer}
 \alias{plot_layer}
-\title{Plots water scene proportions of each pixel in bounding box}
+\title{Plots one layer of the netCDF}
 \usage{
 plot_layer(
   ncLayer,
@@ -42,5 +42,15 @@ values.}
 \item{plotLegend}{If True legend will be plotted}
 }
 \description{
-Plots water scene proportions of each pixel in bounding box
+The plot is the layer on top of a leaflet map. The color scheme can
+be done for numeric or categorical values.
+}
+\details{
+Use case: Proportions of a scene.
+The above values and correspoding colors
+need to be specifiec. If for example values between 0 and 0.5 (50\%) should be
+white, values between 0.5 and 0.75 should be yellow and values above 0.75
+should be purple, aboveValues are c(0, 0.5, 0.75) and the aboveColors are
+c("white", "yellow", "purple"). In that case a legendTitle is recommended to
+explain what is displayed.
 }

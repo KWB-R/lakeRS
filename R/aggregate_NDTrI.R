@@ -1,7 +1,7 @@
 #' Aggregation of all pixel NDTrIs into one lake NDTrI
 #' 
 #' @param ndtriPixels A list of NDTrI per pixel of one or more years, created by
-#' [get_pixel_index()]
+#' [seasonal_index_per_pixel()]
 #'
 #'
 #' @importFrom stats median sd

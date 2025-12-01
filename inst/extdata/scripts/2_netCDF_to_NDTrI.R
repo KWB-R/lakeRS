@@ -43,7 +43,7 @@ lakeRS::plot_layer(
   legendTitle = "Water Scene Proportion"
 )
 
-ndtriPixels <- lakeRS::get_pixel_NDTrI(
+ndtriPixels <- lakeRS::seasonal_index_per_pixel(
   nc = nc, 
   ncImage = ncImage, 
   years = 2018:2024, 
