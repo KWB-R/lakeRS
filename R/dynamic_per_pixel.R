@@ -90,9 +90,9 @@ dynamic_per_pixel <- function(
   
   ts_start <- ts[pixel_selection_i,]
   rm(ts)
+  equal_size_nRow <- ceiling(maxDataPoints / dim(ts_start)[2])
+  nm <- ceiling(dim(ts_start)[1]/equal_size_nRow)
   if(prod(dim(ts_start)) > maxDataPoints){
-    equal_size_nRow <- ceiling(maxDataPoints / dim(ts_start)[2])
-    nm <- ceiling(dim(ts_start)[1]/equal_size_nRow)
     cat(paste0(paste0(
       "Due to large matrix size, data is splitted into ", 
       nm, " small matrices ... \n")
@@ -108,7 +108,9 @@ dynamic_per_pixel <- function(
     ts_start <- ts_parts
     rm(ts_parts)
     gc()
-  } 
+  }  else {
+    ts_start <- list(ts_start)
+  }
   
   cat(paste0(
     "Calculate moving averages of ", nAvailable, " pixel timesseries ... \n")
@@ -128,9 +130,14 @@ dynamic_per_pixel <- function(
     df_out[,-grep(pattern = "doy", colnames(df_out))[-1]]
   })
   cat(" | all matrixes done \n")
+
+  if(length(df_out) > 1L){
+    df_out <- do.call(cbind, df_out)
+    df_out <- df_out[,-grep(pattern = "doy", colnames(df_out))[-1]]
+  } else {
+    df_out <- df_out[[1]]
+  }
   
-  df_out <- do.call(cbind, df_out)
-  df_out <- df_out[,-grep(pattern = "doy", colnames(df_out))[-1]]
   colnames(df_out)[2:ncol(df_out)] <- paste0("p_", 1:(ncol(df_out)-1))
   
   i_col <- ceiling(pixel_selection_i/ d[1])

@@ -4,7 +4,14 @@
 \alias{plot_dynamic}
 \title{Plot the moving average dynamic of an index}
 \usage{
-plot_dynamic(dpp, lakeName = "", ylab = "Index", pixelClusters = NULL)
+plot_dynamic(
+  dpp,
+  lakeName = "",
+  ylab = "Index",
+  pixelClusters = NULL,
+  ylim = NULL,
+  smallBandOnly = FALSE
+)
 }
 \arguments{
 \item{dpp}{The dynamic per pixel output by \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
@@ -17,6 +24,12 @@ plot_dynamic(dpp, lakeName = "", ylab = "Index", pixelClusters = NULL)
 according to the pixel names (column names in the dpp$moving_average table).
 If pixelClusters are provided the dynamic is plotted for each cluster
 separately.}
+
+\item{ylim}{Optional manual definition of the y-axes dimension.}
+
+\item{smallBandOnly}{If pixel clusters are provided, smallBandOnly TRUE means
+that only the 50\% range of data (25th to 75th percentile) and median value
+are plotted.}
 }
 \description{
 Plot the moving average dynamic of an index

@@ -4,7 +4,13 @@
 \alias{load_netcdf}
 \title{Function loads a netCDF file and imports all the important information for NDTrI}
 \usage{
-load_netcdf(filePath, fileName = "openEO.nc", vars = c("B02", "B05", "SCL"))
+load_netcdf(
+  filePath,
+  fileName = "openEO.nc",
+  vars = c("B02", "B05", "SCL"),
+  start_xy = c(1, 1),
+  count_xy = c(NA, NA)
+)
 }
 \arguments{
 \item{filePath}{the path of the netCDF file}
@@ -15,6 +21,12 @@ provides a file that is named "openEO.nc"}
 \item{vars}{A character defining the variables of the netcdf to be loaded.
 The default is B02, B05 and SCL which are needed for NDTrI calculation.
 If "all" is specified, all available variables are loaded.}
+
+\item{start_xy, count_xy}{The first value and the length of the from netCDF
+extracted location values in x and y direciton. If count_xy is c(NA,NA), all
+values are loaded. If it is NA for only one axis all values in this direction
+are loaded. These arguments can be used for very large files, where
+the netcdf need to be cut into smaller pieces.}
 }
 \value{
 Returns a list of spatial and temporal variables and all the other layers of

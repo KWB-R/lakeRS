@@ -10,9 +10,10 @@ dynamic_per_pixel(
   years,
   water_scenes_only = TRUE,
   days_around_ma = 20,
-  nMax = 1000,
+  maxPixels = 1000,
   threshold = NULL,
-  lakeInfo = c("", "")
+  lakeInfo = c("", ""),
+  maxDataPoints = 5e+06
 )
 }
 \arguments{
@@ -31,7 +32,7 @@ except for cloud and snow scenes.}
 \item{days_around_ma}{The days around the moving average day (i.e. 10  means
 10 days before and ten days after the actual day are used for averaging)}
 
-\item{nMax}{Maximum number of pixels (randomly chosen from available pixels).
+\item{maxPixels}{Maximum number of pixels (randomly chosen from available pixels).
 If Inf, all pixels will be analysed.}
 
 \item{threshold}{The mininum number of valid values for one pixel to be
@@ -41,6 +42,10 @@ threshold can be)}
 \item{lakeInfo}{Character vector of length 2 specifying the Name and the ID
 of the lake. This is not needed for any calculation but is important to
 identify the lake.}
+
+\item{maxDataPoints}{The number of datapoints to be part of one matrix
+for moving average calculation. The default (5E+06) corresponds to 5000 pixels
+in 1000 images.}
 }
 \description{
 The dynamic can include many years, all sorted by the day of the year.

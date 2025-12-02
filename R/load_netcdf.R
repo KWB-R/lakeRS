@@ -6,7 +6,7 @@
 #' @param vars A character defining the variables of the netcdf to be loaded.
 #' The default is B02, B05 and SCL which are needed for NDTrI calculation.
 #' If "all" is specified, all available variables are loaded.  
-#' @start_xy,count_xy The first value and the length of the from netCDF 
+#' @param start_xy,count_xy The first value and the length of the from netCDF 
 #' extracted location values in x and y direciton. If count_xy is c(NA,NA), all 
 #' values are loaded. If it is NA for only one axis all values in this direction 
 #' are loaded. These arguments can be used for very large files, where
@@ -17,12 +17,12 @@
 #' the data cube.
 #' 
 #' @importFrom ncdump NetCDF
-#' @importFrom raster raster crs brick
+#' @importFrom raster raster crs brick extend crop
 #' 
 #' @export
 load_netcdf <- function(
     filePath, fileName = "openEO.nc", vars = c("B02", "B05", "SCL"),
-    start_xy = c(1,1), count_xy = c(NA,NA)
+    start_xy = c(10,10), count_xy = c(NA,NA)
 ){
   ncMeta <- ncdump::NetCDF(x = file.path(filePath, fileName))
   if(any(is.na(count_xy))){
@@ -34,12 +34,33 @@ load_netcdf <- function(
       count_xy[2] <- ncMeta$dimension$len[ncMeta$dimension$name == "y"]
     }
   }
+  
+  to_many_counts <- c(dimDf$len[dimDf$name == "x"], dimDf$len[dimDf$name == "y"]) - 
+    (count_xy + start_xy - 1)
+  if(any(to_many_counts < 0)){
+    count_xy[to_many_counts < 0] <- count_xy[to_many_counts < 0] + to_many_counts[to_many_counts < 0] 
+  }
+  
+  crop_nc <- FALSE
+  v_crop <- c(
+    "xmin" = start_xy[1], 
+    "xmax" = start_xy[1] + count_xy[1] - 1, 
+    "ymin" = start_xy[2], 
+    "ymax" = start_xy[2] + count_xy[2] - 1
+  )
+  
   availableVars <- ncMeta$variable$name
   availableVars <- availableVars[availableVars != "crs"]
   if("all" %in% vars){
     vars <- availableVars
   }
+  
   dimDf <- ncMeta$dimension
+  if(count_xy[1] < dimDf$len[dimDf$name == "x"] |
+     count_xy[2] < dimDf$len[dimDf$name == "y"]){
+    crop_nc <- TRUE
+  }
+  
   x_id <-  dimDf$id[dimDf$name == "x"]
   y_id <-  dimDf$id[dimDf$name == "y"]
   t_id <-  dimDf$id[dimDf$name == "t"]
@@ -47,8 +68,8 @@ load_netcdf <- function(
   valDf <- ncMeta$dimension_values
   cat(paste0("Loading Coordinates and time variables ... \n"))
   nc <- list()
-  nc[["x"]] <- valDf$vals[valDf$id == x_id][start_xy[1]:(start_xy + count_xy - 1)[1]]
-  nc[["y"]] <- valDf$vals[valDf$id == y_id][start_xy[2]:(start_xy + count_xy - 1)[2]]
+  nc[["x"]] <- valDf$vals[valDf$id == x_id]
+  nc[["y"]] <- valDf$vals[valDf$id == y_id]
   nc[["t"]] <- valDf$vals[valDf$id == t_id]
   nc[["t_date"]] <- as.Date(nc[["t"]], origin = "1990-01-01")
   
@@ -68,7 +89,15 @@ load_netcdf <- function(
           x = file.path(filePath, fileName), 
           varname = varName
         )
-    }
+      if(crop_nc){
+        bb_crop <- c(
+          range(nc$x[v_crop[1:2]]),
+          range(nc$y[v_crop[3:4]])
+        )
+        e <- raster::extent(bb_crop)
+        nc[[varName]] <- raster::crop(nc[[varName]], e)
+      }
+  }
     nc[["crs"]] <- crsInfo
   } else {
     nc <- NULL
