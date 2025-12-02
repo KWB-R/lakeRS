@@ -8,7 +8,7 @@ load_netcdf(
   filePath,
   fileName = "openEO.nc",
   vars = c("B02", "B05", "SCL"),
-  start_xy = c(1, 1),
+  start_xy = c(10, 10),
   count_xy = c(NA, NA)
 )
 }

@@ -6,9 +6,11 @@
 #' @param title A character defining the job title (can be a lake name, id). It
 #' is advised to use a unique name (i.e. including a timestamp) that is used on
 #' openEO and as a folder on the local machine
-#' @param bbox Numerical vector defining the bounding box in the coordinate 
-#' reference system as defined in crs.The order of the values is north, east, 
-#' south, west.
+#' @param geom Numerical vector defining the bounding box in the coordinate 
+#' reference system as defined in crs. The order of the values is north, east, 
+#' south, west. Alternatively, geom can be a list of 3 or more 
+#' latitude-longitude pairs, each pair is a vector of length 2 in the list to 
+#' create a polyong (which is actually not bounding box any longer...)
 #' @param tBeg,tEnd Dates in the format "YYYY-MM-DD" which define the temporal
 #' extent of the data to be downloaded. Left side (tBeg) is included, right side
 #' (tEnd) is excluded from range.
@@ -21,6 +23,9 @@
 #' @param bands A list of characters defining The bands to be downloaded. 
 #' For the normalized difference trophic index bands 2, 5 and the scene 
 #' classification (SCL) are required. Set to NULL to download all bands.
+#' @param relativeOrbitNumber Definition of relativeOrbitNumber to filter for 
+#' as character vector. 
+#' @param tileID Definition of Tiles to filter for as character vector. 
 #' @param outputFormat On of the available output formats (netcdf is default). 
 #' The formats can be listed by [openeo::list_file_formats()]. Other alternatives
 #' for higher dimensional data cubes are "GeoJSON" or "GTiff".
@@ -31,13 +36,18 @@
 #' This function only returns the title of the job that is started on openEO.
 #' To download the job use function [download_openEO_job]
 #' 
+#' @details
+#' Laitude-Longitude Pairs are switched to longitude-latitude which is the 
+#' required order of openEO, however providing the data as latitude-longitude 
+#' is more convient beacuse it is the google maps output format
+#' 
 #' @export
 #' 
 #' @importFrom openeo processes list_file_formats list_jobs create_job start_job
 #' 
 start_openEO_job <- function(
     title,
-    bbox,
+    geom,
     tBeg, tEnd,
     crs = 4326,
     collection = "SENTINEL2_L2A", 
@@ -65,14 +75,26 @@ start_openEO_job <- function(
     props <- NULL
   }
  
+  if(is.numeric(geom)){
+    se <- list(
+      "crs" = crs, 
+      "north" = geom[1], 
+      "east" = geom[2], 
+      "south" = geom[3],
+      "west" = geom[4])
+  } else if (is.list(geom)){
+    geom <- lapply(geom, function(x){x[2:1]})
+    geom[[length(geom) + 1]] <- geom[[1]]
+    se <- list(
+      "type" = "Polygon",
+      "crs" = crs,
+      "coordinates" = list(geom)
+    )
+  }
+
   dataDefinition <- p$load_collection(
     "id" = collection,
-    "spatial_extent" = list(
-      "crs" = crs, 
-      "north" = bbox[1], 
-      "east" = bbox[2], 
-      "south" = bbox[3],
-      "west" = bbox[4]),
+    "spatial_extent" = se,
     "temporal_extent" = list(tBeg, tEnd),
     "bands" = bands, 
     "properties" =as.list(props)

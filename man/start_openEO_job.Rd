@@ -6,12 +6,15 @@
 \usage{
 start_openEO_job(
   title,
-  bbox,
+  geom,
   tBeg,
   tEnd,
+  polygon,
   crs = 4326,
   collection = "SENTINEL2_L2A",
   bands = list("B02", "B05", "SCL"),
+  relativeOrbitNumber = NULL,
+  tileID = NULL,
   outputFormat = "netCDF",
   uniqueTitle = TRUE
 )
@@ -21,9 +24,11 @@ start_openEO_job(
 is advised to use a unique name (i.e. including a timestamp) that is used on
 openEO and as a folder on the local machine}
 
-\item{bbox}{Numerical vector defining the bounding box in the coordinate
-reference system as defined in crs.The order of the values is north, east,
-south, west.}
+\item{geom}{Numerical vector defining the bounding box in the coordinate
+reference system as defined in crs. The order of the values is north, east,
+south, west. Alternatively, geom can be a list of 3 or more
+latitude-longitude pairs, each pair is a vector of length 2 in the list to
+create a polyong (which is actually not bounding box any longer...)}
 
 \item{tBeg, tEnd}{Dates in the format "YYYY-MM-DD" which define the temporal
 extent of the data to be downloaded. Left side (tBeg) is included, right side
@@ -56,4 +61,9 @@ To download the job use function \link{download_openEO_job}
 \description{
 This function will implement and start a job on openEO. You need to be
 connected and logged in to run this function.
+}
+\details{
+Laitude-Longitude Pairs are switched to longitude-latitude which is the
+required order of openEO, however providing the data as latitude-longitude
+is more convient beacuse it is the google maps output format
 }
