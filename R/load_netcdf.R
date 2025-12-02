@@ -35,6 +35,7 @@ load_netcdf <- function(
     }
   }
   
+  dimDf <- ncMeta$dimension
   to_many_counts <- c(dimDf$len[dimDf$name == "x"], dimDf$len[dimDf$name == "y"]) - 
     (count_xy + start_xy - 1)
   if(any(to_many_counts < 0)){
@@ -55,7 +56,6 @@ load_netcdf <- function(
     vars <- availableVars
   }
   
-  dimDf <- ncMeta$dimension
   if(count_xy[1] < dimDf$len[dimDf$name == "x"] |
      count_xy[2] < dimDf$len[dimDf$name == "y"]){
     crop_nc <- TRUE
