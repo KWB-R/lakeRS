@@ -42,11 +42,29 @@ start_openEO_job <- function(
     crs = 4326,
     collection = "SENTINEL2_L2A", 
     bands = list("B02", "B05", "SCL"),
+    relativeOrbitNumber = NULL,
+    tileID = NULL,
     outputFormat = "netCDF",
     uniqueTitle = TRUE
 ){
   p <- openeo::processes() 
   
+  props <- list()
+  if(!is.null(relativeOrbitNumber)){
+    props <- c(
+      props, 
+      "relativeOrbitNumber" = relativeOrbitNumber
+    )
+  }
+  if(!is.null(tileID)){
+    props <- c(
+      props, 
+      "tileId" = tileID)
+  }
+  if(length(props) == 0L){
+    props <- NULL
+  }
+ 
   dataDefinition <- p$load_collection(
     "id" = collection,
     "spatial_extent" = list(
@@ -57,7 +75,7 @@ start_openEO_job <- function(
       "west" = bbox[4]),
     "temporal_extent" = list(tBeg, tEnd),
     "bands" = bands, 
-    "properties" = NULL
+    "properties" =as.list(props)
   )
   
   #f = openeo::list_file_formats()
