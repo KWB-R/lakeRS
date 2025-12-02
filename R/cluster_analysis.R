@@ -19,18 +19,24 @@
 best_nk <- function(
     ts_table, kMax = 10, improvement_objective = 10, plot_result = TRUE
 ){
-  na_values <- sapply(dpp$moving_averages, function(x){any(is.na(x))})
+  ts_table <- ts_table[,-1]
+  if(ncol(ts_table) > 10000){
+    set.seed(1)
+    ts_table <- ts_table[,sample(1:ncol(ts_table), size = 10000)]
+  }
+  
+  na_values <- sapply(ts_table, function(x){any(is.na(x))})
   remove_pixel <- which(na_values)
   if(length(remove_pixel) > 0L){
-    dpp$moving_averages <- dpp$moving_averages[,-remove_pixel]
+    ts_table <- ts_table[,-remove_pixel]
     warning(length(remove_pixel), " Pixels contained NA values and were removed",
             " prior to cluster analysis")
   }
   
   wcss <- c()
   for(i in 1:kMax){
-    cat(paste0("Calculation of ", i, ifelse(i = 1, "cluster", "clusters"), " ... \n"))
-    kmeansOutput <- kmeans(t(ts_table[,-1]), centers = i, iter.max = 20, nstart = 10)
+    cat(paste0("Calculation of ", i, ifelse(i == 1, " cluster", " clusters"), " ... \n"))
+    kmeansOutput <- kmeans(t(ts_table), centers = i, iter.max = 20, nstart = 10)
     wcss <- c(wcss, kmeansOutput$tot.withinss)
   }
   wcss_improve <- -(diff(wcss) / wcss[1:(length(wcss) - 1)] * 100)
@@ -76,9 +82,10 @@ pixel_clusters <- function(
     warning(length(remove_pixel), " Pixels contained NA values and were removed",
             " prior to cluster analysis")
   }
-  
+  # rounding data points to smooth out differences of very similar data points
+  x <- signif(dpp$moving_averages[,-1], 3)
   kmeansOutput <- kmeans(
-    t(dpp$moving_averages[,-1]), centers = k, iter.max = iter.max, nstart = nstart
+    t(x), centers = k, iter.max = iter.max, nstart = nstart
   )
   
   m_init <- matrix(data = 0, nrow = length(nc$y), ncol = length(nc$x))

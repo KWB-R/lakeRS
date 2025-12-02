@@ -8,6 +8,9 @@
 #' If pixelClusters are provided the dynamic is plotted for each cluster 
 #' separately.
 #' @param ylim Optional manual definition of the y-axes dimension.
+#' @param smallBandOnly If pixel clusters are provided, smallBandOnly TRUE means
+#' that only the 50% range of data (25th to 75th percentile) and median value 
+#' are plotted.
 #' 
 #' @details
 #' A maximum of 5000 timeseries will be drawn as single lines. If more data is 
@@ -18,7 +21,8 @@
 #' @export
 #' 
 plot_dynamic <- function(
-    dpp, lakeName = "", ylab = "Index", pixelClusters = NULL, ylim = NULL
+    dpp, lakeName = "", ylab = "Index", pixelClusters = NULL, ylim = NULL, 
+    smallBandOnly = FALSE
 ){
   
   cv <- lakeRS::tenClusterColors$color
@@ -83,17 +87,27 @@ plot_dynamic <- function(
       all_values <- dpp$moving_averages[,names(pixelClusters)[pixelClusters == cl_i]]
       value_stats <- apply(all_values, 1, quantile, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), na.rm = TRUE)
       
-      polygon(x = c(1:365, 365:1), 
-              y = c(value_stats["5%",], rev(value_stats["95%",])), 
-              border = NA, col = polygon_color[cl_i], )
+      if(!smallBandOnly){
+        polygon(x = c(1:365, 365:1), 
+                y = c(value_stats["5%",], rev(value_stats["95%",])), 
+                border = NA, col = polygon_color[cl_i], ) 
+      }
       polygon(x = c(1:365, 365:1), 
               y = c(value_stats["25%",], rev(value_stats["75%",])), 
               border = NA, col = polygon_color[cl_i], )
       lines(x = 1:365, y = value_stats["50%",], lwd = 2, col = cv[cl_i])
       
     }
-    legend("top", legend = paste0("C", cn," (n=", n_cn, ")"), fill = cv[cn], 
-           horiz = TRUE, bg = "black", box.lwd = NA, cex = 0.9, text.col = "white")
+    legend(
+      "top", 
+      legend = paste0("C", cn," (n=", format(n_cn, big.mark = ","), ")"), 
+      fill = cv[cn], 
+      horiz = TRUE, 
+      bg = "black", 
+      box.lwd = NA, 
+      cex = 0.9, 
+      text.col = "white"
+    )
   }
 }
 

@@ -16,18 +16,21 @@
 #' @param threshold The mininum number of valid values for one pixel to be 
 #' processed (the higher the days around moving averages are, the lower this
 #' threshold can be)
-#' @param nMax Maximum number of pixels (randomly chosen from available pixels).
+#' @param maxPixels Maximum number of pixels (randomly chosen from available pixels).
 #' If Inf, all pixels will be analysed.
 #' @param lakeInfo Character vector of length 2 specifying the Name and the ID
 #' of the lake. This is not needed for any calculation but is important to 
 #' identify the lake.
+#' @param maxDataPoints The number of datapoints to be part of one matrix
+#' for moving average calculation. The default (5E+06) corresponds to 5000 pixels
+#' in 1000 images. 
 #' 
 #' @export
 #' 
 #' 
 dynamic_per_pixel <- function(
     ncImage, t_date, years, water_scenes_only = TRUE, days_around_ma = 20, 
-    nMax = 1000, threshold = NULL, lakeInfo = c("", "")
+    maxPixels = 1000, threshold = NULL, lakeInfo = c("", ""), maxDataPoints = 5000000
 ){
   output <- list()
   output[["lakeInfo"]] <- lakeInfo
@@ -38,10 +41,12 @@ dynamic_per_pixel <- function(
   yearFilter <- imageYear %in% years
   
   indexImages <- ncImage$RSindex[yearFilter]
+  imageDOY <- imageDOY[yearFilter]
   d <- dim(indexImages[[1]])
+  
   sclImage <- ncImage$SCL[yearFilter]
   
-  print("Image data is filtered pixel by pixel.... ")
+  cat("Image data is filtered pixel by pixel ... \n")
   
   if(water_scenes_only){
     indexImages <- lapply(seq_along(indexImages), function(i){
@@ -58,7 +63,7 @@ dynamic_per_pixel <- function(
   t_doy <- imageDOY[order(imageDOY)]
   indexImages_doy <- indexImages[order(imageDOY)]
   
-  print("Data is reshaped from spatial image data to timeseries per pixel ...")
+  cat("Data is reshaped from spatial image data to timeseries per pixel ... \n")
   ts <- matrix(
     data = unlist(indexImages_doy), 
     nrow = d[1] * d[2], 
@@ -78,26 +83,56 @@ dynamic_per_pixel <- function(
   pixel_selection <- valid_values > threshold
   pixel_selection_i <- which(pixel_selection)
   nAvailable <- length(pixel_selection_i)
-  if(nAvailable > nMax){
-    pixel_selection_i <- sample(pixel_selection_i, nMax)
+  if(nAvailable > maxPixels){
+    pixel_selection_i <- sample(pixel_selection_i, maxPixels)
     nAvailable <- length(pixel_selection_i)
   }
-  print(paste0(
-    "Calculate moving averages of ", nAvailable, " pixel timesseries ...")
-  )
- 
-  lake_output <- lapply(pixel_selection_i, function(p_i){
-    moving_average(
-      ts_pixel = ts[p_i,], 
-      t_doy = t_doy,
-      days_around_ma = days_around_ma
-    )
-  })
   
-  df_out <- do.call(cbind, lake_output)
+  ts_start <- ts[pixel_selection_i,]
+  rm(ts)
+  if(prod(dim(ts_start)) > maxDataPoints){
+    equal_size_nRow <- ceiling(maxDataPoints / dim(ts_start)[2])
+    nm <- ceiling(dim(ts_start)[1]/equal_size_nRow)
+    cat(paste0(paste0(
+      "Due to large matrix size, data is splitted into ", 
+      nm, " small matrices ... \n")
+    ))
+    ts_parts <- list()
+    i <- 1
+    while(nrow(ts_start) > equal_size_nRow){
+      ts_parts[[i]] <- ts_start[1:equal_size_nRow,]
+      ts_start <- ts_start[-(1:equal_size_nRow),]
+      i <- i + 1
+    }
+    ts_parts[[i]] <- ts_start[1:nrow(ts_start),]
+    ts_start <- ts_parts
+    rm(ts_parts)
+    gc()
+  } 
+  
+  cat(paste0(
+    "Calculate moving averages of ", nAvailable, " pixel timesseries ... \n")
+  )
+  
+  cat(paste0("Processing ", nm, " matrices ... \n"))
+  df_out <- lapply(ts_start, function(ts){
+    cat(" | matrix done")
+    lake_output <- lapply(1:nrow(ts), function(p_i){
+      moving_average(
+        ts_pixel = ts[p_i,], 
+        t_doy = t_doy,
+        days_around_ma = days_around_ma
+      )
+    })
+    df_out <- do.call(cbind, lake_output)
+    df_out[,-grep(pattern = "doy", colnames(df_out))[-1]]
+  })
+  cat(" | all matrixes done \n")
+  
+  df_out <- do.call(cbind, df_out)
   df_out <- df_out[,-grep(pattern = "doy", colnames(df_out))[-1]]
   colnames(df_out)[2:ncol(df_out)] <- paste0("p_", 1:(ncol(df_out)-1))
-
+  
   i_col <- ceiling(pixel_selection_i/ d[1])
   i_row <- pixel_selection_i - d[1] * (i_col - 1)
   
