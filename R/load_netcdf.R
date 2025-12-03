@@ -25,19 +25,21 @@ load_netcdf <- function(
     start_xy = c(10,10), count_xy = c(NA,NA)
 ){
   ncMeta <- ncdump::NetCDF(x = file.path(filePath, fileName))
+  dimDf <- ncMeta$dimension
+  xLen <- dimDf$len[dimDf$name == "x"]
+  yLen <- dimDf$len[dimDf$name == "y"]
   if(any(is.na(count_xy))){
     all_values <- c("x", "y")[which(is.na(count_xy))]
     if("x" %in% all_values){
-      count_xy[1] <- ncMeta$dimension$len[ncMeta$dimension$name == "x"]
+      count_xy[1] <- xLen
     }
     if("y" %in% all_values){
-      count_xy[2] <- ncMeta$dimension$len[ncMeta$dimension$name == "y"]
+      count_xy[2] <-  yLen
     }
   }
   
-  dimDf <- ncMeta$dimension
-  to_many_counts <- c(dimDf$len[dimDf$name == "x"], dimDf$len[dimDf$name == "y"]) - 
-    (count_xy + start_xy - 1)
+ 
+  to_many_counts <- c(xLen, yLen) - (count_xy + start_xy - 1)
   if(any(to_many_counts < 0)){
     count_xy[to_many_counts < 0] <- count_xy[to_many_counts < 0] + to_many_counts[to_many_counts < 0] 
   }
@@ -56,8 +58,7 @@ load_netcdf <- function(
     vars <- availableVars
   }
   
-  if(count_xy[1] < dimDf$len[dimDf$name == "x"] |
-     count_xy[2] < dimDf$len[dimDf$name == "y"]){
+  if(count_xy[1] < xLen |count_xy[2] < yLen){
     crop_nc <- TRUE
   }
   
@@ -66,10 +67,12 @@ load_netcdf <- function(
   t_id <-  dimDf$id[dimDf$name == "t"]
   
   valDf <- ncMeta$dimension_values
+  initial_x <- valDf$vals[valDf$id == x_id]
+  initial_y <- valDf$vals[valDf$id == y_id]
   cat(paste0("Loading Coordinates and time variables ... \n"))
   nc <- list()
-  nc[["x"]] <- valDf$vals[valDf$id == x_id]
-  nc[["y"]] <- valDf$vals[valDf$id == y_id]
+  nc[["x"]] <- valDf$vals[valDf$id == x_id][start_xy[1]:(start_xy + count_xy - 1)[1]]
+  nc[["y"]] <- valDf$vals[valDf$id == y_id][start_xy[2]:(start_xy + count_xy - 1)[2]]
   nc[["t"]] <- valDf$vals[valDf$id == t_id]
   nc[["t_date"]] <- as.Date(nc[["t"]], origin = "1990-01-01")
   
@@ -91,8 +94,8 @@ load_netcdf <- function(
         )
       if(crop_nc){
         bb_crop <- c(
-          range(nc$x[v_crop[1:2]]),
-          range(nc$y[v_crop[3:4]])
+          range(initial_x[v_crop[1:2]]),
+          range(initial_y[v_crop[3:4]])
         )
         e <- raster::extent(bb_crop)
         nc[[varName]] <- raster::crop(nc[[varName]], e)
