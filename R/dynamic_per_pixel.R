@@ -36,28 +36,36 @@ dynamic_per_pixel <- function(
   output[["lakeInfo"]] <- lakeInfo
   
   imageDOY <- as.numeric(format(t_date, "%j"))
+  
   imageYear <- as.numeric(format(t_date, "%Y"))
-  
   yearFilter <- imageYear %in% years
-  
   indexImages <- ncImage$RSindex[yearFilter]
   imageDOY <- imageDOY[yearFilter]
+  sclImages <- ncImage$SCL[yearFilter]
+  
   d <- dim(indexImages[[1]])
   
-  sclImage <- ncImage$SCL[yearFilter]
+  rm(ncImage)
+  gc()
+  # if(object.size(ncImage)/1E+09 > 10){
+  #   
+  # }
   
-  cat("Image data is filtered pixel by pixel ... \n")
+  cat("Image data is filtered for SCL categories pixel by pixel ... \n")
   
-  if(water_scenes_only){
-    indexImages <- lapply(seq_along(indexImages), function(i){
-      indexImages[[i]][sclImage[[i]] != 6] <- NA
-      indexImages[[i]]
-    })
-  } else {
-    indexImages <- lapply(seq_along(indexImages), function(i){
-      indexImages[[i]][sclImage[[i]] %in% c(8:11)] <- NA
-      indexImages[[i]]
-    })     
+  for(i in seq_along(indexImages)){
+    indexImages[[i]] <- if(water_scenes_only){
+      scl_filter(
+        indexImage = indexImages[[i]], 
+        sclImage = sclImages[[i]], 
+        bands = 6, 
+        invert = TRUE)
+    } else {
+      scl_filter(
+        indexImage = indexImages[[i]], 
+        sclImage = sclImages[[i]], 
+        bands = c(8:11))    
+    }
   }
   
   t_doy <- imageDOY[order(imageDOY)]
@@ -81,6 +89,17 @@ dynamic_per_pixel <- function(
   
   valid_values <- apply(ts, 1 , function(p_ts){sum(!is.na(p_ts))})
   pixel_selection <- valid_values > threshold
+  if(sum(pixel_selection) == 0){
+    return(
+      list("moving_averages" = NULL,
+           "raster_location" = data.frame(
+             "pixel" = NA,
+             "i_col" = 0,
+             "i_row" = 0,
+             "valid_values" = 0)
+      )
+    )
+  }
   pixel_selection_i <- which(pixel_selection)
   nAvailable <- length(pixel_selection_i)
   if(nAvailable > maxPixels){
@@ -118,7 +137,6 @@ dynamic_per_pixel <- function(
   
   cat(paste0("Processing ", nm, " matrices ... \n"))
   df_out <- lapply(ts_start, function(ts){
-    cat(" | matrix done")
     lake_output <- lapply(1:nrow(ts), function(p_i){
       moving_average(
         ts_pixel = ts[p_i,], 
@@ -126,11 +144,12 @@ dynamic_per_pixel <- function(
         days_around_ma = days_around_ma
       )
     })
-    df_out <- do.call(cbind, lake_output)
-    df_out[,-grep(pattern = "doy", colnames(df_out))[-1]]
+    df_pro <- do.call(cbind, lake_output)
+    cat(" | matrix done")
+    df_pro[,-grep(pattern = "doy", colnames(df_pro))[-1]]
   })
   cat(" | all matrixes done \n")
-
+  
   if(length(df_out) > 1L){
     df_out <- do.call(cbind, df_out)
     df_out <- df_out[,-grep(pattern = "doy", colnames(df_out))[-1]]
@@ -178,4 +197,19 @@ moving_average <- function(ts_pixel, t_doy, days_around_ma){
     mean(ts_pixel[days_for_ma], na.rm = TRUE) 
   })
   df_out
+}
+
+#' Set values NA by SCL
+#' 
+#' @param indexImage,sclImage Index and SCL layer of the image
+#' @param bands Numeric vector specifiyng the SCL categories
+#' @param invert If True the filtering is inverted
+#' 
+scl_filter <- function(indexImage, sclImage, bands, invert = FALSE){
+  if(invert){
+    indexImage[!(sclImage %in% bands)] <- NA
+  } else {
+    indexImage[!(sclImage %in% bands)] <- NA
+  }
+  indexImage
 }
