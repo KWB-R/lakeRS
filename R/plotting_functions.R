@@ -102,6 +102,9 @@ plot_layer <- function(
     if(!is.null(aboveValues)){
       if(is.null(highestValue)){
         highestValue <- max(raster::values(r_wgs84), na.rm = TRUE)
+        if(highestValue <= max(aboveValues)){
+          highestValue <- NULL
+        }
       }
       cuts <- c(aboveValues, highestValue) #set breaks
       r_factor <- cut(
