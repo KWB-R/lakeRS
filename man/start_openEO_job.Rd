@@ -9,7 +9,6 @@ start_openEO_job(
   geom,
   tBeg,
   tEnd,
-  polygon,
   crs = 4326,
   collection = "SENTINEL2_L2A",
   bands = list("B02", "B05", "SCL"),
@@ -45,6 +44,11 @@ https://epsg.io/4326}
 \item{bands}{A list of characters defining The bands to be downloaded.
 For the normalized difference trophic index bands 2, 5 and the scene
 classification (SCL) are required. Set to NULL to download all bands.}
+
+\item{relativeOrbitNumber}{Definition of relativeOrbitNumber to filter for
+as character vector.}
+
+\item{tileID}{Definition of Tiles to filter for as character vector.}
 
 \item{outputFormat}{On of the available output formats (netcdf is default).
 The formats can be listed by \code{\link[openeo:list_file_formats]{openeo::list_file_formats()}}. Other alternatives

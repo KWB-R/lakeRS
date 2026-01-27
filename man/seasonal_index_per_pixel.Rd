@@ -34,6 +34,23 @@ a pixel needs to be defined as water scene to be included.}
 of the lake. This is not needed for any calculation but is important to
 identify the lake.}
 }
+\value{
+A list of
+\itemize{
+\item lakeInfo: A character of lake Name and ID or whatever is provided as
+meta data#
+\item A list per season
+\itemize{
+\item RSindex: A Matrix of the whole rechtangle containing the index per pixel
+for the whole season
+\item QualityThreshold: The minimum proportion a pixel is required to be
+identified as water during one season
+\item minValuesPerPixel: The mininum number of images used for index calculation
+ofone pixel (Quality_threshold x Images_of_Season)
+\item validPixel: The number of pixels above Quality Threshold
+}
+}
+}
 \description{
 Calculate an index per pixel averaged over time
 }

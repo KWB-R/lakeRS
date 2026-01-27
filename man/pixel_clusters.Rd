@@ -4,7 +4,7 @@
 \alias{pixel_clusters}
 \title{cluster analysis (k-means) and map layer}
 \usage{
-pixel_clusters(dpp, nc, k, iter.max = 20, nstart = 10)
+pixel_clusters(dpp, nc, k, iter.max = 20, nstart = 10, correlate_first = FALSE)
 }
 \arguments{
 \item{dpp}{The output of \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
@@ -14,6 +14,10 @@ pixel_clusters(dpp, nc, k, iter.max = 20, nstart = 10)
 \item{k}{The number of Clusters}
 
 \item{iter.max, nstart}{Arguments of \code{\link[=kmeans]{kmeans()}}}
+
+\item{correlate_first}{If TRUE, Pearson correlation between pixels will be
+used for clustering instead of Index values. This results in a clustering
+based on different shapes of the dynamic.}
 }
 \value{
 A list of the k-means output and a layer of clusted pixels

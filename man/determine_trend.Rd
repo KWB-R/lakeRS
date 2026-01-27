@@ -34,8 +34,9 @@ In order to rule out systematic errors based on weather conditions in a year,
 different hardware or algorithms, the difference between the overall median
 value of all lakes and years and the yearly median value of all lakes is
 added to the NDTrI of a lake before the trends are calculated. Median values
-are only based on lakes for which data is available in all years.
-Subsequantially, the trend is calculated as linear regression between previous
+are based on lakes or pixels for which data is available in all considered
+years.
+Subsequantly, the trend is calculated as linear regression between previous
 years and adjusted NDTrI values.
 For a reliable trend assessment the number of lakes needs to be large enough
 (n>10).

@@ -4,11 +4,16 @@
 \alias{best_nk}
 \title{Find the number of clusters to use in kmeans}
 \usage{
-best_nk(ts_table, kMax = 10, improvement_objective = 10, plot_result = TRUE)
+best_nk(
+  dpp,
+  kMax = 10,
+  improvement_objective = 10,
+  plot_result = TRUE,
+  correlate_first = FALSE
+)
 }
 \arguments{
-\item{ts_table}{A table of timeseries data per pixel created by
-\code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
+\item{dpp}{The output of \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
 
 \item{kMax}{Tha maximum number of clusters to be tested}
 
@@ -16,6 +21,10 @@ best_nk(ts_table, kMax = 10, improvement_objective = 10, plot_result = TRUE)
 (WCSS) by addition of one cluster in \%.}
 
 \item{plot_result}{Logical}
+
+\item{correlate_first}{If TRUE, Pearson correlation between pixels will be
+used for clustering instead of Index values. This results in a clustering
+based on different shapes of the dynamic.}
 }
 \value{
 This function plots the improvement values and returns the recommended
@@ -23,4 +32,12 @@ number of cluster to use
 }
 \description{
 Based on the reduction of within cluster sum of squares
+}
+\details{
+The search for the best number of clusters is done by a maximum of 10 000
+pixels, which is assumed to be sufficient. If correlation is done first
+those 10 000 pixels are correlated with 1000 pixels of the same data.
+Furthermore, the number of observerations (365 days) is reduced to every
+third day only, to lower process time. This way, correlation should take
+less than 10 seconds.
 }
