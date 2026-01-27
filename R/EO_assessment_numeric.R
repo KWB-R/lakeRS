@@ -103,8 +103,9 @@ determine_status <- function(
 #' different hardware or algorithms, the difference between the overall median 
 #' value of all lakes and years and the yearly median value of all lakes is 
 #' added to the NDTrI of a lake before the trends are calculated. Median values
-#' are only based on lakes for which data is available in all years.
-#' Subsequantially, the trend is calculated as linear regression between previous
+#' are based on lakes or pixels for which data is available in all considered 
+#' years.
+#' Subsequantly, the trend is calculated as linear regression between previous
 #' years and adjusted NDTrI values.
 #' For a reliable trend assessment the number of lakes needs to be large enough 
 #' (n>10).
@@ -185,4 +186,70 @@ determine_trend <- function(yearly_spread = yearly_spread, shortTerm = 3, longTe
        "overallMedian" = overall_median,
        "yearlyMedians" = yearly_medians)
 }
+
+
+#' Turn numerical trends into trend significance classes
+#'
+#' @param assessmentTable The output table created by [EO_assessment_numeric()]
+#' @param trendType Character string. Either "long" long-term or "short" for 
+#' short-term
+#' 
+#' @details
+#' The trend significance is 0 if 0 is within
+#' the range of ("trend - error" , "trend + error") (-> no 
+#' significant trend). If 0 is not within ("trend - error" , "trend + error") 
+#' but within ("trend - 2 x error" , "trend + 2 x error") the class is either
+#' -1 (low significant negative trend) or +1 (low significant positive trend). 
+#' If 0 is not even part of the larger interval the class is either -2 (highly 
+#' significant negative trend) or +2 (highly significant positive trend), where
+#' a positive trend describes the decrease of the trophic index.
+#' 
+#' The trend strength is the absolute value of the trend significance class 
+#' multiplied by the actual trend and -1. Thus a trend strength >> 0 is a 
+#' sigifinicant high decrease of trophic state and vice versa
+#' 
+#' @return 
+#' The assessmentTable expended by two columns for the trend significance and
+#' the trend strength
+#' 
+#' @export
+#' 
+trends_to_classes <- function(assessmentTable, trendType = "long"){
+  columnNames <- if(trendType == "long"){
+    c("trend_long", "error_long")
+  } else {
+    c("trend_short", "error_short")
+  }
+  
+  assessmentTable[[paste0("trend_", trendType, "_significance")]] <- 
+    sapply(1:nrow(assessmentTable), function(i){
+      t <- assessmentTable[[columnNames[1]]][[i]]
+      if(!is.na(t)){
+        e <- assessmentTable[[columnNames[2]]][[i]]
+        
+        trend_class <- if(sum(c(t + e, t-e) > 0) == 1L){
+          0
+        } else if(sum(c(t + 2 * e, t-  2 *e) > 0) == 1L){
+          1
+        } else {
+          2
+        }
+        if(t > 0){
+          trend_class <- trend_class * -1
+        }
+        trend_class
+      } else {
+        NA
+      }
+    })
+  
+  assessmentTable[[paste0("trend_", trendType, "_strength")]] <- 
+    abs(assessmentTable[[paste0("trend_", trendType, "_significance")]]) * 
+    assessmentTable[[columnNames[1]]] * -1
+    
+  
+  assessmentTable
+}
+
+
 
