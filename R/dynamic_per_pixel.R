@@ -95,7 +95,7 @@ dynamic_per_pixel <- function(
   if(prod(dim(ts_start)) > maxDataPoints){
     cat(paste0(paste0(
       "Due to large matrix size, data is splitted into ", 
-      nm, " small matrices ... \n")
+      nm+1, " small matrices ... \n")
     ))
     ts_parts <- list()
     i <- 1
@@ -115,30 +115,34 @@ dynamic_per_pixel <- function(
   cat(paste0(
     "Calculate moving averages of ", nAvailable, " pixel timesseries ... \n")
   )
-  
-  cat(paste0("Processing ", nm, " matrices ... \n"))
+  ipa <- images_per_ma(
+    t_doy = t_doy,
+    days_around_ma = days_around_ma
+  )
+
+  cat(paste0("Processing ", nm+1, " matrices ... \n"))
   df_out <- lapply(ts_start, function(ts){
     cat(" | matrix done")
-    lake_output <- lapply(1:nrow(ts), function(p_i){
-      moving_average(
-        ts_pixel = ts[p_i,], 
-        t_doy = t_doy,
-        days_around_ma = days_around_ma
-      )
+    lake_output <- lapply(seq_along(ipa), function(i){
+      imagesUsed <- which(ipa[[i]])
+      if(length(imagesUsed) > 0L){
+        rowMeans(x = ts[,which(ipa[[i]])], na.rm = TRUE)
+      } else {
+        rep(NA, nrow(ts))
+      }
     })
-    df_out <- do.call(cbind, lake_output)
-    df_out[,-grep(pattern = "doy", colnames(df_out))[-1]]
+    do.call(rbind, lake_output)
   })
   cat(" | all matrixes done \n")
-
+  
   if(length(df_out) > 1L){
     df_out <- do.call(cbind, df_out)
-    df_out <- df_out[,-grep(pattern = "doy", colnames(df_out))[-1]]
   } else {
     df_out <- df_out[[1]]
   }
   
-  colnames(df_out)[2:ncol(df_out)] <- paste0("p_", 1:(ncol(df_out)-1))
+  colnames(df_out) <- paste0("p_", 1:ncol(df_out))
+  df_out <- cbind("doy" = 1:365, df_out)
   
   i_col <- ceiling(pixel_selection_i/ d[1])
   i_row <- pixel_selection_i - d[1] * (i_col - 1)
@@ -152,6 +156,28 @@ dynamic_per_pixel <- function(
   )
 }
 
+
+#' Subset of all images to be used for moving averages for each day
+#' 
+#' @param t_doy Numeric vector of the day of the year according to ts_pixel 
+#' (same length and order)
+#' @param days_around_ma The days around the moving average day (i.e. 10  means
+#' 10 days before and ten days after the actual day are used for averaging)
+#' 
+images_per_ma <- function(t_doy, days_around_ma){
+  lapply(1:365, function(doy){
+    d_range <- doy + c(-20, 20)
+    d_range[d_range < 1] <- d_range[d_range < 1] + 365
+    d_range[d_range > 365] <- d_range[d_range > 365] - 365
+    
+    if(d_range[2] > d_range[1]){
+      t_doy > d_range[1] & t_doy < d_range[2]
+    } else {
+      t_doy > d_range[1] | t_doy < d_range[2]
+    }
+  })
+}
+
 #' Moving average for a sorted pixel vector with according day of the year time 
 #' vector
 #' 
@@ -162,20 +188,21 @@ dynamic_per_pixel <- function(
 #' 10 days before and ten days after the actual day are used for averaging)
 #' 
 #' 
-moving_average <- function(ts_pixel, t_doy, days_around_ma){
-  df_out <- data.frame("doy" = 1:365)
-  
-  df_out$ma <- sapply(df_out$doy, function(doy){
-    d_range <- doy + c(-days_around_ma, days_around_ma)
-    d_range[d_range < 1] <- d_range[d_range < 1] + 365
-    d_range[d_range > 365] <- d_range[d_range > 365] - 365
-    
-    days_for_ma <- if(d_range[2] > d_range[1]){
-      t_doy > d_range[1] & t_doy < d_range[2]
-    } else {
-      t_doy > d_range[1] | t_doy < d_range[2]
-    }
-    mean(ts_pixel[days_for_ma], na.rm = TRUE) 
-  })
-  df_out
-}
+# moving_average <- function(ts_pixel, t_doy, days_around_ma){
+#   df_out <- data.frame("doy" = 1:365)
+#   
+#   df_out$ma <- sapply(df_out$doy, function(doy){
+#     d_range <- doy + c(-days_around_ma, days_around_ma)
+#     d_range[d_range < 1] <- d_range[d_range < 1] + 365
+#     d_range[d_range > 365] <- d_range[d_range > 365] - 365
+#     
+#     days_for_ma <- if(d_range[2] > d_range[1]){
+#       t_doy > d_range[1] & t_doy < d_range[2]
+#     } else {
+#       t_doy > d_range[1] | t_doy < d_range[2]
+#     }
+#     mean(ts_pixel[days_for_ma], na.rm = TRUE) 
+#   })
+#   df_out
+# }
+
