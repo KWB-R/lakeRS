@@ -13,6 +13,19 @@
 #' of the lake. This is not needed for any calculation but is important to 
 #' identify the lake.
 #' 
+#' @return 
+#' A list of 
+#'  - lakeInfo: A character of lake Name and ID or whatever is provided as 
+#'  meta data#
+#'  - A list per season
+#'    - RSindex: A Matrix of the whole rechtangle containing the index per pixel 
+#'    for the whole season
+#'    - QualityThreshold: The minimum proportion a pixel is required to be
+#'    identified as water during one season
+#'    - minValuesPerPixel: The mininum number of images used for index calculation 
+#'    ofone pixel (Quality_threshold x Images_of_Season)
+#'    - validPixel: The number of pixels above Quality Threshold
+#'  
 #' @export
 #' 
 seasonal_index_per_pixel <- function(
@@ -54,7 +67,7 @@ seasonal_index_per_pixel <- function(
     waterLayer <- lakeRS::waterscene_proportion(scl_image = sclImage)
     
     pixelFilter <- waterLayer$water >= pixelQualityThreshold
-    waterLayer$water[!pixelFilter] <- NA
+    RSindex[!pixelFilter] <- NA
     
     output[[paste0("y", year)]] <- list(
       "RSindex" = RSindex,
