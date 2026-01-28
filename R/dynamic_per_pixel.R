@@ -27,7 +27,6 @@
 #' 
 #' @export
 #' 
-#' 
 dynamic_per_pixel <- function(
     ncImage, t_date, years, water_scenes_only = TRUE, days_around_ma = 20, 
     maxPixels = 1000, threshold = NULL, lakeInfo = c("", ""), maxDataPoints = 5000000
@@ -42,22 +41,31 @@ dynamic_per_pixel <- function(
   
   indexImages <- ncImage$RSindex[yearFilter]
   imageDOY <- imageDOY[yearFilter]
+  sclImages <- ncImage$SCL[yearFilter]
+  
   d <- dim(indexImages[[1]])
   
-  sclImage <- ncImage$SCL[yearFilter]
+  # rm(ncImage)
+  # gc()
+  # if(object.size(ncImage)/1E+09 > 10){
+  #   
+  # }
   
-  cat("Image data is filtered pixel by pixel ... \n")
+  cat("Image data is filtered for SCL categories pixel by pixel ... \n")
   
-  if(water_scenes_only){
-    indexImages <- lapply(seq_along(indexImages), function(i){
-      indexImages[[i]][sclImage[[i]] != 6] <- NA
-      indexImages[[i]]
-    })
-  } else {
-    indexImages <- lapply(seq_along(indexImages), function(i){
-      indexImages[[i]][sclImage[[i]] %in% c(8:11)] <- NA
-      indexImages[[i]]
-    })     
+  for(i in seq_along(indexImages)){
+    indexImages[[i]] <- if(water_scenes_only){
+      scl_filter(
+        indexImage = indexImages[[i]], 
+        sclImage = sclImages[[i]], 
+        bands = 6, 
+        invert = TRUE)
+    } else {
+      scl_filter(
+        indexImage = indexImages[[i]], 
+        sclImage = sclImages[[i]], 
+        bands = c(8:11))    
+    }
   }
   
   t_doy <- imageDOY[order(imageDOY)]
@@ -81,6 +89,19 @@ dynamic_per_pixel <- function(
   
   valid_values <- apply(ts, 1 , function(p_ts){sum(!is.na(p_ts))})
   pixel_selection <- valid_values > threshold
+  
+  if(sum(pixel_selection) == 0){
+    return(
+      list("moving_averages" = NULL,
+           "raster_location" = data.frame(
+             "pixel" = NA,
+             "i_col" = 0,
+             "i_row" = 0,
+             "valid_values" = 0)
+      )
+    )
+  }
+  
   pixel_selection_i <- which(pixel_selection)
   nAvailable <- length(pixel_selection_i)
   if(nAvailable > maxPixels){
@@ -119,7 +140,7 @@ dynamic_per_pixel <- function(
     t_doy = t_doy,
     days_around_ma = days_around_ma
   )
-
+  
   cat(paste0("Processing ", nm+1, " matrices ... \n"))
   df_out <- lapply(ts_start, function(ts){
     cat(" | matrix done")
@@ -156,7 +177,6 @@ dynamic_per_pixel <- function(
   )
 }
 
-
 #' Subset of all images to be used for moving averages for each day
 #' 
 #' @param t_doy Numeric vector of the day of the year according to ts_pixel 
@@ -166,7 +186,7 @@ dynamic_per_pixel <- function(
 #' 
 images_per_ma <- function(t_doy, days_around_ma){
   lapply(1:365, function(doy){
-    d_range <- doy + c(-20, 20)
+    d_range <- doy + c(-days_around_ma, days_around_ma)
     d_range[d_range < 1] <- d_range[d_range < 1] + 365
     d_range[d_range > 365] <- d_range[d_range > 365] - 365
     
@@ -178,31 +198,18 @@ images_per_ma <- function(t_doy, days_around_ma){
   })
 }
 
-#' Moving average for a sorted pixel vector with according day of the year time 
-#' vector
+#' Set values NA by SCL
 #' 
-#' @param ts_pixel Data for one pixel of multiple images (ts)
-#' @param t_doy Numeric vector of the day of the year according to ts_pixel 
-#' (same length and order)
-#' @param days_around_ma The days around the moving average day (i.e. 10  means
-#' 10 days before and ten days after the actual day are used for averaging)
+#' @param indexImage,sclImage Index and SCL layer of the image
+#' @param bands Numeric vector specifiyng the SCL categories to filtered for
+#' @param invert If TRUE the filtering is inverted -> specefied bands are removed
 #' 
-#' 
-# moving_average <- function(ts_pixel, t_doy, days_around_ma){
-#   df_out <- data.frame("doy" = 1:365)
-#   
-#   df_out$ma <- sapply(df_out$doy, function(doy){
-#     d_range <- doy + c(-days_around_ma, days_around_ma)
-#     d_range[d_range < 1] <- d_range[d_range < 1] + 365
-#     d_range[d_range > 365] <- d_range[d_range > 365] - 365
-#     
-#     days_for_ma <- if(d_range[2] > d_range[1]){
-#       t_doy > d_range[1] & t_doy < d_range[2]
-#     } else {
-#       t_doy > d_range[1] | t_doy < d_range[2]
-#     }
-#     mean(ts_pixel[days_for_ma], na.rm = TRUE) 
-#   })
-#   df_out
-# }
-
+scl_filter <- function(indexImage, sclImage, bands, invert = FALSE){
+  if(invert){
+    indexImage[!(sclImage %in% bands)] <- NA
+  } else {
+    indexImage[!(sclImage %in% bands)] <- NA
+  }
+  indexImage
+}
+>>>>>>> c91d979d3f068e2d74c8eac59c874cbb27f57666
