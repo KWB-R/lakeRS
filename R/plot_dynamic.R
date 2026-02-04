@@ -55,7 +55,11 @@ plot_dynamic <- function(
     "%b")
   
   if(is.null(ylim)){
-    ylim = range(all_values, na.rm = TRUE)
+    if(smallBandOnly){
+      ylim = range(value_stats) * c(1, 1.1)
+    } else {
+      ylim = range(all_values, na.rm = TRUE) * c(1, 1.1)
+    }
   }
   plot(x = 1:365, y = all_values[,1], type = "n", 
        ylab = ylab, xlab = "Day of the Year", 
