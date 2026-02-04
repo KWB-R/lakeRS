@@ -17,6 +17,8 @@ nc_scene_per_image <- function(nc, scene = "clouds"){
     b <- 11
   } else if(scene == "shadows"){
     b <- c(2,3)
+  } else {
+    stop("'scene' argument must be one of 'clouds', 'water', 'snow' or 'shadows'")
   }
   
   coverage <- c()
