@@ -19,17 +19,21 @@
 #' @export
 #' 
 waterscene_proportion <- function(scl_image){
-  scenes <- lapply(1:11, function(s) {
+  scenes <- lapply(0:11, function(s) {
     Reduce("+", lapply(scl_image, function(image_scene){
       image_scene == s
     })) / length(scl_image)
   })
   
-  cloudsSnowTopography <- 
-    scenes[[7]] + scenes[[8]] + scenes[[9]] + scenes[[10]] + 
-    scenes[[11]] + scenes[[3]] + scenes[[2]] 
+  AllowedDisturbingScenes <- c(0, 2, 3, 7, 8, 9, 10, 11)
+  
+  cloudsSnowTopography <- scenes[[AllowedDisturbingScenes[1] + 1]]
+  for(s in AllowedDisturbingScenes[-1]){
+    cloudsSnowTopography <- cloudsSnowTopography + scenes[[s+1]]
+  }
+ 
   # The proportion of water pixels after removing clouds and snow or ice
-  water <- scenes[[6]] / (1 - cloudsSnowTopography)
+  water <- scenes[[6+1]] / (1 - cloudsSnowTopography)
   
   list("water" = water,
        "NoFalseDisturbance" = cloudsSnowTopography, 
