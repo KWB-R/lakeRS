@@ -4,13 +4,20 @@
 \alias{plot_image_dates}
 \title{Plot of images per day and year}
 \usage{
-plot_image_dates(vDate, vCoverage = NULL)
+plot_image_dates(
+  vDate,
+  vCoverage = NULL,
+  upperLimits = c(0.05, 0.1, 0.3, 0.5, 0.75, 1)
+)
 }
 \arguments{
 \item{vDate}{A vector of image dates}
 
 \item{vCoverage}{A dataframe of scene proportion per image created by
 \code{\link[=nc_scene_per_image]{nc_scene_per_image()}}}
+
+\item{upperLimits}{Vector of Numerical values between 0 and 1 that are used
+as upper limits of coverage intervals. The number of intervals is flexible.}
 }
 \description{
 Plot of images per day and year
