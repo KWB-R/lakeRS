@@ -7,7 +7,7 @@
 best_nk(
   dpp,
   kMax = 10,
-  improvement_objective = 10,
+  explanation_objective = 0.98,
   plot_result = TRUE,
   correlate_first = FALSE
 )
@@ -17,8 +17,8 @@ best_nk(
 
 \item{kMax}{Tha maximum number of clusters to be tested}
 
-\item{improvement_objective}{The improvement of within cluster sum of squares
-(WCSS) by addition of one cluster in \%.}
+\item{explanation_objective}{The a threshold between 0 and 1 for the ratio
+between Within-Cluster sum of squares and Between-Cluster sum of squares.}
 
 \item{plot_result}{Logical}
 
