@@ -212,4 +212,3 @@ scl_filter <- function(indexImage, sclImage, bands, invert = FALSE){
   }
   indexImage
 }
->>>>>>> c91d979d3f068e2d74c8eac59c874cbb27f57666
