@@ -7,7 +7,7 @@ Authors@R: c(
     person("Kompetenzzentrum Wasser Berlin gGmbH (KWB)", role = "cph")
   )
 Description: Download and process ESA Sentinel-2 L2A data to obtain
-    trophic state information.
+    trophic state information or other satellite based indexes.
 License: MIT + file LICENSE
 URL: https://github.com/KWB-R/lakeRS
 BugReports: https://github.com/KWB-R/lakeRS/issues
