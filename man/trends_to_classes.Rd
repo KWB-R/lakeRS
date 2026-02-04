@@ -12,19 +12,24 @@ trends_to_classes(assessmentTable, trendType = "long")
 \item{trendType}{Character string. Either "long" long-term or "short" for
 short-term}
 }
+\value{
+The assessmentTable expended by two columns for the trend significance and
+the trend strength
+}
 \description{
 Turn numerical trends into trend significance classes
 }
 \details{
-The trend class corresponds to the significance of the trend. If 0 is within
-the range of "trend - error" , "trend + error" the class is 0 (-> no
+The trend significance is 0 if 0 is within
+the range of ("trend - error" , "trend + error") (-> no
 significant trend). If 0 is not within ("trend - error" , "trend + error")
 but within ("trend - 2 x error" , "trend + 2 x error") the class is either
--1 (weak significant negative trend) or +1 (weak significant positive trend).
+-1 (low significant negative trend) or +1 (low significant positive trend).
 If 0 is not even part of the larger interval the class is either -2 (highly
 significant negative trend) or +2 (highly significant positive trend), where
 a positive trend describes the decrease of the trophic index.
 
-The trend class does not give any information on the height of the trend but
-only on the signiificance.
+The trend strength is the absolute value of the trend significance class
+multiplied by the actual trend and -1. Thus a trend strength >> 0 is a
+sigifinicant high decrease of trophic state and vice versa
 }
