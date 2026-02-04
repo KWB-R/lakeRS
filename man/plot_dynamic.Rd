@@ -10,6 +10,7 @@ plot_dynamic(
   ylab = "Index",
   pixelClusters = NULL,
   ylim = NULL,
+  singlePixels = FALSE,
   smallBandOnly = FALSE
 )
 }
@@ -27,9 +28,11 @@ separately.}
 
 \item{ylim}{Optional manual definition of the y-axes dimension.}
 
-\item{smallBandOnly}{If pixel clusters are provided, smallBandOnly TRUE means
-that only the 50\% range of data (25th to 75th percentile) and median value
-are plotted.}
+\item{singlePixels}{If True lines will be drawn for single pixel dynamics
+in addition to the interval}
+
+\item{smallBandOnly}{smallBandOnly TRUE means that only the 50\% range of data
+(25th to 75th percentile) and median value are plotted.}
 }
 \description{
 Plot the moving average dynamic of an index

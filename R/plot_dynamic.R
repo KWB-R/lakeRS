@@ -8,9 +8,10 @@
 #' If pixelClusters are provided the dynamic is plotted for each cluster 
 #' separately.
 #' @param ylim Optional manual definition of the y-axes dimension.
-#' @param smallBandOnly If pixel clusters are provided, smallBandOnly TRUE means
-#' that only the 50% range of data (25th to 75th percentile) and median value 
-#' are plotted.
+#' @param singlePixels If True lines will be drawn for single pixel dynamics
+#' in addition to the interval
+#' @param smallBandOnly smallBandOnly TRUE means that only the 50% range of data 
+#' (25th to 75th percentile) and median value are plotted.
 #' 
 #' @details
 #' A maximum of 5000 timeseries will be drawn as single lines. If more data is 
