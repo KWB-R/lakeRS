@@ -22,17 +22,17 @@
 #' 
 plot_dynamic <- function(
     dpp, lakeName = "", ylab = "Index", pixelClusters = NULL, ylim = NULL, 
-    smallBandOnly = FALSE
+    singlePixels = FALSE, smallBandOnly = FALSE
 ){
   
   cv <- lakeRS::tenClusterColors$color
-
+  
   polygon_color <- apply(X = col2rgb(cv), 
-        MARGIN = 2, 
-        FUN = function(x){
-          rgb(red = x["red"], green = x["green"], blue = x["blue"], 
-              alpha = 80, maxColorValue = 255)
-        }
+                         MARGIN = 2, 
+                         FUN = function(x){
+                           rgb(red = x["red"], green = x["green"], blue = x["blue"], 
+                               alpha = 80, maxColorValue = 255)
+                         }
   )
   
   all_values <- dpp$moving_averages[,-1]
@@ -56,15 +56,25 @@ plot_dynamic <- function(
   
   if(is.null(ylim)){
     if(smallBandOnly){
-      ylim = range(value_stats) * c(1, 1.1)
+      yrange <- range(c(value_stats["25%",], value_stats["75%",]))
     } else {
-      ylim = range(all_values, na.rm = TRUE) * c(1, 1.1)
+      if(singlePixels){
+        yrange <- range(all_values, na.rm = TRUE) 
+      } else {
+        yrange <- range(c(value_stats["5%",], value_stats["95%",]))
+      }
     }
+    ylim <- c(yrange[1] - diff(yrange) * 0.1, yrange[2] + diff(yrange) * 0.1)
+    
   }
   plot(x = 1:365, y = all_values[,1], type = "n", 
        ylab = ylab, xlab = "Day of the Year", 
        ylim = ylim, 
-       main = lakeName, xaxs = "i")
+       main = paste0(lakeName, ifelse(
+         smallBandOnly,  
+         yes = " (Median and 50% Interval)", 
+         no = " (Median and 90% Interval)")), 
+       xaxs = "i")
   
   abline(v = v_lines, lty = "dashed")
   mtext(text = m_text, side = 3, line = 0.5, at = m_position)
@@ -72,15 +82,17 @@ plot_dynamic <- function(
     polygon(x = c(1:365, 365:1), 
             y = c(value_stats["5%",], rev(value_stats["95%",])), 
             border = NA, col = polygon_color[1], )
-    nLines <- ncol(all_values)
-    i_cols <- 1:ncol(all_values) 
-    if(nLines > 5000){
-      i_cols <- sample(nLines, size = 5000)
-      nLines <- length(i_cols)
-    } 
-    op <- 1 / (ifelse(nLines > 40, yes = nLines, no = 40)/40) 
-    for(i in i_cols){
-      lines(x = 1:365, y = all_values[,i], col = rgb(0,0,0,op))
+    if(singlePixels){
+      nLines <- ncol(all_values)
+      i_cols <- 1:ncol(all_values) 
+      if(nLines > 5000){
+        i_cols <- sample(nLines, size = 5000)
+        nLines <- length(i_cols)
+      } 
+      op <- 1 / (ifelse(nLines > 40, yes = nLines, no = 40)/40) 
+      for(i in i_cols){
+        lines(x = 1:365, y = all_values[,i], col = rgb(0,0,0,op))
+      }
     }
     
     lines(x = 1:365, y = value_stats["50%",], lwd = 2, col = cv[1])
@@ -110,7 +122,8 @@ plot_dynamic <- function(
       bg = "black", 
       box.lwd = NA, 
       cex = 0.9, 
-      text.col = "white"
+      text.col = "white", 
+      ncol = 5
     )
   }
 }
