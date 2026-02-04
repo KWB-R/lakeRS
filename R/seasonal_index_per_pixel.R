@@ -47,6 +47,22 @@ seasonal_index_per_pixel <- function(
     indexImages <- ncImage$RSindex[timeFilter]
     sclImage <- ncImage$SCL[timeFilter]
     
+
+    for(i in seq_along(indexImages)){
+      indexImages[[i]] <- if(water_scenes_only){
+        scl_filter(
+          indexImage = indexImages[[i]], 
+          sclImage = sclImage[[i]], 
+          bands = 6, 
+          invert = TRUE)
+      } else {
+        scl_filter(
+          indexImage = indexImages[[i]], 
+          sclImage = sclImage[[i]], 
+          bands = c(8:11))    
+      }
+    }
+    
     if(water_scenes_only){
       indexImages <- lapply(seq_along(indexImages), function(i){
         indexImages[[i]][sclImage[[i]] != 6] <- NA
@@ -65,22 +81,25 @@ seasonal_index_per_pixel <- function(
     )
     
     waterLayer <- lakeRS::waterscene_proportion(scl_image = sclImage)
-    
+
     pixelFilter <- waterLayer$water >= pixelQualityThreshold
+    if(sum(pixelFilter) == 0L){
+      warning("No pixel meets the required water scene proportion defined as",
+      " quality threshold.")
+    }
     RSindex[!pixelFilter] <- NA
     
     output[[paste0("y", year)]] <- list(
       "RSindex" = RSindex,
       "QualityThreshold" = pixelQualityThreshold, 
-      "minValuesPerPixel" = floor(pixelQualityThreshold * sum(timeFilter)),
+      "minValuesPerPixel" = floor(pixelQualityThreshold *
+                                    (1 - median(waterLayer$NoFalseDisturbance)) * 
+                                    sum(timeFilter)),
       "validPixel" = sum(pixelFilter)
     )
   }
   output
 }
-
-
-
 
 #' NDTri per pixel
 #' 
