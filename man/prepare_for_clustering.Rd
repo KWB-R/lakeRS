@@ -28,3 +28,9 @@ used for following cluster analysis
 \description{
 Pre-processing done before cluster analysis
 }
+\details{
+If correlate first, pixels are identified as outliers and removed if there
+not at least 5\% other pixels that correlate at least 0.95. For example, given
+1000 correlated pixels, the evaluated pixels is not an outlier if it
+correlates to >= 50 pixels >= 0.95.
+}

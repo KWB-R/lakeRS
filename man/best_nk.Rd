@@ -7,7 +7,7 @@
 best_nk(
   dpp,
   kMax = 10,
-  explanation_objective = 0.98,
+  minimum_clusterSize = 0.01,
   plot_result = TRUE,
   correlate_first = FALSE
 )
@@ -17,8 +17,8 @@ best_nk(
 
 \item{kMax}{Tha maximum number of clusters to be tested}
 
-\item{explanation_objective}{The a threshold between 0 and 1 for the ratio
-between Within-Cluster sum of squares and Between-Cluster sum of squares.}
+\item{minimum_clusterSize}{The minimum size of a cluster allowed. By default
+1\% of all moving average pixels, need to be in a cluster.}
 
 \item{plot_result}{Logical}
 

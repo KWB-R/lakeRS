@@ -4,8 +4,8 @@
 #' 
 #' @param dpp The output of [dynamic_per_pixel()]
 #' @param kMax Tha maximum number of clusters to be tested
-#' @param explanation_objective The a threshold between 0 and 1 for the ratio 
-#' between Within-Cluster sum of squares and Between-Cluster sum of squares.
+#' @param minimum_clusterSize The minimum size of a cluster allowed. By default
+#' 1% of all moving average pixels, need to be in a cluster. 
 #' @param plot_result Logical
 #' @param correlate_first If TRUE, Pearson correlation between pixels will be 
 #' used for clustering instead of Index values. This results in a clustering 
@@ -28,7 +28,7 @@
 #' @export
 #' 
 best_nk <- function(
-    dpp, kMax = 10, explanation_objective = 0.98, plot_result = TRUE, correlate_first = FALSE
+    dpp, kMax = 10, minimum_clusterSize = 0.01, plot_result = TRUE, correlate_first = FALSE
 ){
   y <- prepare_for_clustering(
     moving_averages_matrix = dpp$moving_averages[,-1], 
@@ -36,20 +36,19 @@ best_nk <- function(
     maxPixels = 10000
   )
   
-  wcss <- c()
-  withinBetween <- 0
   i <- 1
-  while(withinBetween < explanation_objective){
+  kmeansOutput <- kmeans(t(y), centers = i, iter.max = 20, nstart = 2)
+  wcss <-withinBetween <- kmeansOutput$betweenss / kmeansOutput$totss
+  while(all(kmeansOutput$size > minimum_clusterSize * ncol(y))){
     if(i > kMax){
       break
     }
+    i <- i + 1
     cat(paste0("Calculation of ", i, ifelse(i == 1, " cluster", " clusters"), " ... \n"))
-    
     kmeansOutput <- kmeans(t(y), centers = i, iter.max = 20, nstart = 2)
-    
+   
     withinBetween <- kmeansOutput$betweenss / kmeansOutput$totss
     wcss <- c(wcss, withinBetween)
-    i <- i + 1
   }
   
   par(mar = c(4.1, 4.1, 4.1, 2.1))
@@ -65,7 +64,6 @@ best_nk <- function(
   best_nCluster <- length(wcss)
   
   abline(v = best_nCluster)
-  abline(h = explanation_objective * 100, lty = "dotted")
   
   tp <- ifelse(
     abs(best_nCluster - par("xaxp")[2]) < abs(best_nCluster - par("xaxp")[1]), 
@@ -107,7 +105,7 @@ pixel_clusters <- function(
   keep <- 1:365
   if(!whole_dynamic){
     proportionToRemove <- 100000 / ncol(dpp$moving_averages)
-    i_d <- round(1 / proportionToRemove)
+    i_d <- ceiling(1 / proportionToRemove)
     if(i_d > 10){
       i_d <- 10
     }
@@ -149,9 +147,16 @@ pixel_clusters <- function(
 #' rows of the moving averages of one index as created by [dynamic_per_pixel()]
 #' @param correlate_first If TRUE, Pearson correlation between pixels will be 
 #' used for clustering instead of Index values. This results in a clustering 
-#' based on different shapes of the dynamic. 
+#' based on different shapes of the dynamic.
 #' @param maxPixels The maximum numbers of pixel used for cluster analysis.
 #' Leave NULL to use all pixels.
+#' 
+#' @details
+#' If correlate first, pixels are identified as outliers and removed if there 
+#' not at least 5% other pixels that correlate at least 0.95. For example, given
+#' 1000 correlated pixels, the evaluated pixels is not an outlier if it 
+#' correlates to >= 50 pixels >= 0.95. 
+#' 
 #' 
 #' @return A matrix either with data per pixels or correlation between pixels
 #' used for following cluster analysis
@@ -189,6 +194,21 @@ prepare_for_clustering <- function(
     }
     cat(paste0("correlation of ", ncol(ts_table), " pixels ... \n"))
     y <- t(cor(x = ts_table, y = ts_reference, use = "pairwise.complete.obs"))
+    
+    
+    # remove pixels that have a low correlation to almost "all" others
+    # highCor <- apply(y, 2, quantile, p = 0.95)
+    # )
+    # cat(paste0(
+    #   sum(highCor < 0.95), " pixels of ", ncol(y), " pixels identified as ",
+    #   "outlier and removed ... \n")
+    # )
+    # 
+    # # maxCor <- apply(y, 2, max)
+    # # maxCor >= 0.99
+    # 
+    # sum(which(maxCor < 0.99) %in% which(highCor < 0.95))
+    # y <- round(y[,highCor >= 0.95], 5)
     y <- round(y, 5)
   } else {
     y <- ts_table
