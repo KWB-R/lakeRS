@@ -36,8 +36,20 @@ plot_dynamic <- function(
                          }
   )
   
-  all_values <- dpp$moving_averages[,-1]
-  value_stats <- apply(all_values, 1, quantile, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), na.rm = TRUE)
+  if(is.null(pixelClusters)){
+    all_values <- dpp$moving_averages[,-1]
+    value_stats <- apply(all_values, 1, quantile, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), na.rm = TRUE) 
+  } else {
+    cn <- sort(unique(pixelClusters))
+    all_values <- lapply(cn, function(cl_i) {
+      dpp$moving_averages[,names(pixelClusters)[pixelClusters == cl_i]]
+      })
+    cluster_stats <- value_stats <- lapply(all_values, function(x){
+      apply(x, 1, quantile, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), na.rm = TRUE)
+    })
+    value_stats <- do.call(cbind, value_stats)
+  }
+
   
   # Plot Dynamic
   v_lines <- as.numeric(format(x = as.Date(
@@ -68,7 +80,7 @@ plot_dynamic <- function(
     ylim <- c(yrange[1] - diff(yrange) * 0.1, yrange[2] + diff(yrange) * 0.1)
     
   }
-  plot(x = 1:365, y = all_values[,1], type = "n", 
+  plot(x = 1:365, y = rep(0,365), type = "n", 
        ylab = ylab, xlab = "Day of the Year", 
        ylim = ylim, 
        main = paste0(lakeName, ifelse(
@@ -98,11 +110,11 @@ plot_dynamic <- function(
     
     lines(x = 1:365, y = value_stats["50%",], lwd = 2, col = cv[1])
   } else {
-    cn <- sort(unique(pixelClusters))
     n_cn <- summary(as.factor(pixelClusters))
+    i <- 1
     for(cl_i in cn){
-      all_values <- dpp$moving_averages[,names(pixelClusters)[pixelClusters == cl_i]]
-      value_stats <- apply(all_values, 1, quantile, probs = c(0.05, 0.25, 0.5, 0.75, 0.95), na.rm = TRUE)
+      value_stats <- cluster_stats[[i]]
+      i <- i + 1
       
       if(!smallBandOnly){
         polygon(x = c(1:365, 365:1), 
@@ -119,12 +131,11 @@ plot_dynamic <- function(
       "top", 
       legend = paste0("C", cn," (n=", format(n_cn, big.mark = ","), ")"), 
       fill = cv[cn], 
-      horiz = TRUE, 
       bg = "black", 
       box.lwd = NA, 
       cex = 0.9, 
       text.col = "white", 
-      ncol = 5
+      ncol = ifelse(length(cn) < 5, length(cn), 5)
     )
   }
 }
