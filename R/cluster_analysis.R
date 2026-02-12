@@ -171,12 +171,24 @@ prepare_for_clustering <- function(
   ts_table <- signif(moving_averages_matrix[,-1], 3)
   
   na_values <- colSums(is.na(ts_table))
-  ts_table <- ts_table[,(na_values == 0L)]
-  nna <- sum(na_values > 0L)
-  if(nna > 0L){
-    warning(nna, " Pixels contained NA values and were removed",
-            " prior to cluster analysis")
+  if(all(na_values) > 0){
+    na_values2 <- rowSums(is.na(ts_table))
+    ts_table <- ts_table[(na_values2 == 0L),]
+    nna2 <- sum(na_values2 > 0L)
+    if(nna2 > 0L){
+      warning(nna2, " Days contained NA values only and were removed",
+              " prior to cluster analysis")
+    }
+    na_values <- colSums(is.na(ts_table))
+  } else {
+    ts_table <- ts_table[,(na_values == 0L)]
+    nna <- sum(na_values > 0L)
+    if(nna > 0L){
+      warning(nna, " Pixels contained NA values and were removed",
+              " prior to cluster analysis")
+    }
   }
+ 
   
   if(!is.null(maxPixels)){
     set.seed(1)
