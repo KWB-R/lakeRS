@@ -1,4 +1,4 @@
-#' A band or index sorted by the day of the year
+#' The moving average dynamic of an RS index
 #' 
 #' The dynamic can include many years, all sorted by the day of the year.
 #' The aggregation per pixel is a moving average.
@@ -12,7 +12,9 @@
 #' used for the yearly average per pixel. If False, all values are included
 #' except for cloud and snow scenes.
 #' @param days_around_ma The days around the moving average day (i.e. 10  means
-#' 10 days before and ten days after the actual day are used for averaging)
+#' 10 days before and ten days after the actual day are used for averaging). If
+#' NULL the number of days around the moving average is derived from the 
+#' median available values per pixel.
 #' @param threshold The mininum number of valid values for one pixel to be 
 #' processed (the higher the days around moving averages are, the lower this
 #' threshold can be)
@@ -25,10 +27,17 @@
 #' for moving average calculation. The default (5E+06) corresponds to 5000 pixels
 #' in 1000 images. 
 #' 
+#' @details
+#' A moving average is calculated for a day if at least two different images 
+#' are available. If the number of images is not sufficient the days_around_ma
+#' need to be increased and the results will become smoother.
+#' 
+#' 
+#' 
 #' @export
 #' 
 dynamic_per_pixel <- function(
-    ncImage, t_date, years, water_scenes_only = TRUE, days_around_ma = 20, 
+    ncImage, t_date, years, water_scenes_only = TRUE, days_around_ma = NULL, 
     maxPixels = 1000, threshold = NULL, lakeInfo = c("", ""), maxDataPoints = 5000000
 ){
   output <- list()
@@ -44,12 +53,6 @@ dynamic_per_pixel <- function(
   sclImages <- ncImage$SCL[yearFilter]
   
   d <- dim(indexImages[[1]])
-  
-  # rm(ncImage)
-  # gc()
-  # if(object.size(ncImage)/1E+09 > 10){
-  #   
-  # }
   
   cat("Image data is filtered for SCL categories pixel by pixel ... \n")
   
@@ -78,16 +81,15 @@ dynamic_per_pixel <- function(
     ncol = length(indexImages_doy)
   )
   
-  # # test the order matrix to vector data
-  # identical(
-  #   indexImages_doy[[1]], 
-  #   matrix(data = ts[,1], nrow = 65, ncol = 57))
+  valid_values <- apply(ts, 1 , function(p_ts){sum(!is.na(p_ts))})
+  med_values <- median(valid_values[valid_values > 0])
+  if(is.null(days_around_ma)){
+    days_around_ma <- ceiling(365 / med_values * 10)
+  }
   
   if(is.null(threshold)){
     threshold <- 365 / days_around_ma * 10 
   }
-  
-  valid_values <- apply(ts, 1 , function(p_ts){sum(!is.na(p_ts))})
   pixel_selection <- valid_values > threshold
   
   if(sum(pixel_selection) == 0){
@@ -140,16 +142,21 @@ dynamic_per_pixel <- function(
     t_doy = t_doy,
     days_around_ma = days_around_ma
   )
-  
+
   cat(paste0("Processing ", nm+1, " matrices ... \n"))
-  df_out <- lapply(ts_start, function(ts){
+  df_out <- lapply(ts_start, function(x){
     cat(" | matrix done")
     lake_output <- lapply(seq_along(ipa), function(i){
       imagesUsed <- which(ipa[[i]])
-      if(length(imagesUsed) > 0L){
-        rowMeans(x = ts[,which(ipa[[i]])], na.rm = TRUE)
+      if(length(imagesUsed) > 1L){ # at least 2 images need to be available
+        rowMeans(
+          x = matrix(
+            data = x[,which(ipa[[i]])], 
+            nrow = nrow(x), 
+            ncol = length(imagesUsed)), 
+          na.rm = TRUE)
       } else {
-        rep(NA, nrow(ts))
+        rep(NA, nrow(x))
       }
     })
     do.call(rbind, lake_output)
@@ -162,9 +169,29 @@ dynamic_per_pixel <- function(
     df_out <- df_out[[1]]
   }
   
+  # no extrapolation of long periods (relative to days around moving average) 
+  # without data
+  missingDOY <- !(1:365 %in% t_doy)
+  binaryChar <- paste0(as.character(as.numeric(missingDOY)), collapse = "")
+  binaryChar <- gsub(pattern = "10", replacement = "100", binaryChar)
+  daysOfPeriod <- dayRepeats <- nchar(strsplit(binaryChar,split = "0")[[1]])
+  dayRepeats[dayRepeats == 0] <- 1 
+  t1 <- daysOfPeriod[1]
+  t365 <- daysOfPeriod[length(daysOfPeriod)]
+  if(t1 > 0 & t365 > 0){
+    daysOfPeriod[1] <- daysOfPeriod[length(daysOfPeriod)] <- t1 + t365
+  }
+  periodPerDay <- rep(daysOfPeriod, dayRepeats)
+  removeValues <- (1:365)[periodPerDay > days_around_ma / 4]
+ 
+
+  if(length(removeValues) > 1){
+    df_out[removeValues,] <- NA 
+  }
+ 
   colnames(df_out) <- paste0("p_", 1:ncol(df_out))
   df_out <- cbind("doy" = 1:365, df_out)
-  
+ 
   i_col <- ceiling(pixel_selection_i/ d[1])
   i_row <- pixel_selection_i - d[1] * (i_col - 1)
   
@@ -173,7 +200,9 @@ dynamic_per_pixel <- function(
          "pixel" = colnames(df_out)[2:ncol(df_out)],
          "i_col" = i_col,
          "i_row" = i_row,
-         "valid_values" = valid_values[pixel_selection_i])
+         "valid_values" = valid_values[pixel_selection_i]),
+       "meta" = c("days_around_ma" = days_around_ma, 
+                  "threshold_value" = threshold)
   )
 }
 
