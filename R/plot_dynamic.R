@@ -69,12 +69,12 @@ plot_dynamic <- function(
   
   if(is.null(ylim)){
     if(smallBandOnly){
-      yrange <- range(c(value_stats["25%",], value_stats["75%",]))
+      yrange <- range(c(value_stats["25%",], value_stats["75%",]), na.rm = TRUE)
     } else {
       if(singlePixels){
         yrange <- range(all_values, na.rm = TRUE) 
       } else {
-        yrange <- range(c(value_stats["5%",], value_stats["95%",]))
+        yrange <- range(c(value_stats["5%",], value_stats["95%",]), na.rm = TRUE)
       }
     }
     ylim <- c(yrange[1] - diff(yrange) * 0.1, yrange[2] + diff(yrange) * 0.1)
@@ -92,9 +92,12 @@ plot_dynamic <- function(
   abline(v = v_lines, lty = "dashed")
   mtext(text = m_text, side = 3, line = 0.5, at = m_position)
   if(is.null(pixelClusters)){
-    polygon(x = c(1:365, 365:1), 
-            y = c(value_stats["5%",], rev(value_stats["95%",])), 
-            border = NA, col = polygon_color[1], )
+    xy <- rm_na_for_polygon(
+      x_v = c(1:365, 365:1), 
+      y_v = c(value_stats["5%",], rev(value_stats["95%",]))
+    )
+    polygon(x = xy$x, y = xy$y, border = NA, col = polygon_color[1])
+    
     if(singlePixels){
       nLines <- ncol(all_values)
       i_cols <- 1:ncol(all_values) 
@@ -117,13 +120,17 @@ plot_dynamic <- function(
       i <- i + 1
       
       if(!smallBandOnly){
-        polygon(x = c(1:365, 365:1), 
-                y = c(value_stats["5%",], rev(value_stats["95%",])), 
-                border = NA, col = polygon_color[cl_i], ) 
+        xy <- rm_na_for_polygon(
+          x_v = c(1:365, 365:1), 
+          y_v = c(value_stats["5%",], rev(value_stats["95%",]))
+        )
+        polygon(x = xy$x, y = xy$y, border = NA, col = polygon_color[cl_i])
       }
-      polygon(x = c(1:365, 365:1), 
-              y = c(value_stats["25%",], rev(value_stats["75%",])), 
-              border = NA, col = polygon_color[cl_i], )
+      xy <- rm_na_for_polygon(
+        x_v = c(1:365, 365:1), 
+        y_v = c(value_stats["25%",], rev(value_stats["75%",]))
+      )
+      polygon(x = xy$x, y = xy$y, border = NA, col = polygon_color[cl_i])
       lines(x = 1:365, y = value_stats["50%",], lwd = 2, col = cv[cl_i])
       
     }
@@ -138,5 +145,22 @@ plot_dynamic <- function(
       ncol = ifelse(length(cn) < 5, length(cn), 5)
     )
   }
+}
+
+#' Remove NA values for polygon plotting
+#' 
+#' @param x_v,y_v vectors of x and y values of the polygon
+#' 
+rm_na_for_polygon <- function(x_v, y_v){
+  if(any(is.na(y_v))){
+    x_v <- x_v[!is.na(y_v)]
+    y_v <- y_v[!is.na(y_v)]
+  }
+  if(any(is.na(x_v))){
+    y_v <- y_v[!is.na(x_v)]
+    x_v <- x_v[!is.na(x_v)]
+  }
+  list("x" = x_v,
+       "y" = y_v)
 }
 

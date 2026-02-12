@@ -2,14 +2,14 @@
 % Please edit documentation in R/dynamic_per_pixel.R
 \name{dynamic_per_pixel}
 \alias{dynamic_per_pixel}
-\title{A band or index sorted by the day of the year}
+\title{The moving average dynamic of an RS index}
 \usage{
 dynamic_per_pixel(
   ncImage,
   t_date,
   years,
   water_scenes_only = TRUE,
-  days_around_ma = 20,
+  days_around_ma = NULL,
   maxPixels = 1000,
   threshold = NULL,
   lakeInfo = c("", ""),
@@ -30,7 +30,9 @@ used for the yearly average per pixel. If False, all values are included
 except for cloud and snow scenes.}
 
 \item{days_around_ma}{The days around the moving average day (i.e. 10  means
-10 days before and ten days after the actual day are used for averaging)}
+10 days before and ten days after the actual day are used for averaging). If
+NULL the number of days around the moving average is derived from the
+median available values per pixel.}
 
 \item{maxPixels}{Maximum number of pixels (randomly chosen from available pixels).
 If Inf, all pixels will be analysed.}
@@ -50,4 +52,9 @@ in 1000 images.}
 \description{
 The dynamic can include many years, all sorted by the day of the year.
 The aggregation per pixel is a moving average.
+}
+\details{
+A moving average is calculated for a day if at least two different images
+are available. If the number of images is not sufficient the days_around_ma
+need to be increased and the results will become smoother.
 }
