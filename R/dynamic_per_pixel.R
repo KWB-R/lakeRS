@@ -3,11 +3,8 @@
 #' The dynamic can include many years, all sorted by the day of the year.
 #' The aggregation per pixel is a moving average.
 #' 
-#' @param ncImage the data list created by [ndi_per_image()],
-#' which must contain the SCL layer if water_scenes_only is TRUE.
-#' @param t_date A vector of the dates of images. This is part of the output
-#' of [load_netcdf()], with the list name "t_date".
-#' @param years Numeric vector of all the years to be included
+#' @param imageIndex the data list created by [ndi_per_image()]
+#' @param nc The netcdf list returned by [open_netcdf()]
 #' @param water_scenes_only By default only pixels classified as water scene are 
 #' used for the yearly average per pixel. If False, all values are included
 #' except for cloud and snow scenes.
@@ -20,12 +17,14 @@
 #' threshold can be)
 #' @param maxPixels Maximum number of pixels (randomly chosen from available pixels).
 #' If Inf, all pixels will be analysed.
-#' @param lakeInfo Character vector of length 2 specifying the Name and the ID
-#' of the lake. This is not needed for any calculation but is important to 
-#' identify the lake.
+#' @param pixelFilter The ID of pixels to be used (The ID of a pixel is its 
+#' its number in the the original matrix of the netcdf).
 #' @param maxDataPoints The number of datapoints to be part of one matrix
 #' for moving average calculation. The default (5E+06) corresponds to 5000 pixels
 #' in 1000 images. 
+#' @param returnSinglePixels If TRUE (default) moving average dynamic of each
+#' pixel (up to the number of maxPixels) is returned. If False only median and
+#' some quantiles are returned.
 #' 
 #' @details
 #' A moving average is calculated for a day if at least two different images 
@@ -37,102 +36,113 @@
 #' @export
 #' 
 dynamic_per_pixel <- function(
-    ncImage, t_date, years, water_scenes_only = TRUE, days_around_ma = NULL, 
-    maxPixels = 1000, threshold = NULL, lakeInfo = c("", ""), maxDataPoints = 5000000
+    imageIndex, nc, water_scenes_only = TRUE, days_around_ma = 20, 
+    maxPixels = 1000, pixelFilter = NULL, threshold = NULL,
+    maxDataPoints = 5000000, returnSinglePixels = TRUE
 ){
-  output <- list()
-  output[["lakeInfo"]] <- lakeInfo
-  
-  imageDOY <- as.numeric(format(t_date, "%j"))
-  imageYear <- as.numeric(format(t_date, "%Y"))
-  
-  yearFilter <- imageYear %in% years
-  
-  indexImages <- ncImage$RSindex[yearFilter]
-  imageDOY <- imageDOY[yearFilter]
-  sclImages <- ncImage$SCL[yearFilter]
-  
-  d <- dim(indexImages[[1]])
+  year <- unique(as.numeric(format(imageIndex$t_date, "%Y")))
+  months <- unique(as.numeric(format(imageIndex$t_date, "%m")))
+  sclList <- load_BandLayer(
+    nc = nc, 
+    band = "SCL", 
+    monthFilter = months, 
+    yearFilter = year
+  )$band
+  indexList <- imageIndex$RSindex
+  if(length(sclList) != length(indexList)){
+    stop("SCL and Index list length do not match.")
+  }
   
   cat("Image data is filtered for SCL categories pixel by pixel ... \n")
-  
-  for(i in seq_along(indexImages)){
-    indexImages[[i]] <- if(water_scenes_only){
+  for(i in seq_along(indexList)){
+    indexList[[i]] <- if(water_scenes_only){
       scl_filter(
-        indexImage = indexImages[[i]], 
-        sclImage = sclImages[[i]], 
+        indexImage = indexList[[i]], 
+        sclImage = sclList[[i]], 
         bands = 6, 
         invert = TRUE)
     } else {
       scl_filter(
-        indexImage = indexImages[[i]], 
-        sclImage = sclImages[[i]], 
+        indexImage = indexList[[i]], 
+        sclImage = sclList[[i]], 
         bands = c(8:11))    
     }
   }
   
+  imageDOY <- as.numeric(format(imageIndex$t_date, "%j"))
   t_doy <- imageDOY[order(imageDOY)]
-  indexImages_doy <- indexImages[order(imageDOY)]
+  indexList <- indexList[order(imageDOY)]
+  d <- dim(indexList[[1]])
   
   cat("Data is reshaped from spatial image data to timeseries per pixel ... \n")
-  ts <- matrix(
-    data = unlist(indexImages_doy), 
-    nrow = d[1] * d[2], 
-    ncol = length(indexImages_doy)
-  )
-  
-  valid_values <- apply(ts, 1 , function(p_ts){sum(!is.na(p_ts))})
-  med_values <- median(valid_values[valid_values > 0])
-  if(is.null(days_around_ma)){
-    days_around_ma <- ceiling(365 / med_values * 10)
-  }
-  
-  if(is.null(threshold)){
-    threshold <- 365 / days_around_ma * 10 
-  }
-  pixel_selection <- valid_values > threshold
-  
-  if(sum(pixel_selection) == 0){
-    return(
-      list("moving_averages" = NULL,
-           "raster_location" = data.frame(
-             "pixel" = NA,
-             "i_col" = 0,
-             "i_row" = 0,
-             "valid_values" = 0)
-      )
+  if(!is.null(pixelFilter)){
+    pixel_selection_i <- pixelFilter
+    nAvailable <- np <- length(pixelFilter)
+    maxPixels <- Inf
+    filteredIndexList <- lapply(indexList, function(x){x[pixelFilter]})
+    ts_select <- matrix(
+      data = unlist(filteredIndexList), 
+      nrow = np, 
+      ncol = length(filteredIndexList)
     )
-  }
-  
-  pixel_selection_i <- which(pixel_selection)
-  nAvailable <- length(pixel_selection_i)
-  if(nAvailable > maxPixels){
-    pixel_selection_i <- sample(pixel_selection_i, maxPixels)
+  } else {
+    ts <- matrix(
+      data = unlist(indexList), 
+      nrow = d[1] * d[2], 
+      ncol = length(indexList)
+    )
+    valid_values <- apply(ts, 1 , function(p_ts){sum(!is.na(p_ts))})
+    med_values <- median(valid_values[valid_values > 0])
+    if(is.null(threshold)){
+      threshold <- med_values
+    }
+    if(is.null(days_around_ma)){
+      days_around_ma <- ceiling(365 / med_values * 3)
+    }
+    pixel_selection <- valid_values > threshold
+    if(sum(pixel_selection) == 0){
+      return(
+        list("moving_averages" = NULL,
+             "raster_location" = data.frame(
+               "pixel" = NA,
+               "i_col" = 0,
+               "i_row" = 0,
+               "valid_values" = 0)
+        )
+      )
+    }
+    pixel_selection_i <- which(pixel_selection)
     nAvailable <- length(pixel_selection_i)
+    if(nAvailable > maxPixels){
+      pixel_selection_i <- sample(pixel_selection_i, maxPixels)
+      nAvailable <- length(pixel_selection_i)
+    }
+    ts_select <- ts[pixel_selection_i,]
+    rm(ts)
   }
   
-  ts_start <- ts[pixel_selection_i,]
-  rm(ts)
-  equal_size_nRow <- ceiling(maxDataPoints / dim(ts_start)[2])
-  nm <- ceiling(dim(ts_start)[1]/equal_size_nRow)
-  if(prod(dim(ts_start)) > maxDataPoints){
+  equal_size_nRow <- ceiling(maxDataPoints / dim(ts_select)[2])
+  nm <- ceiling(dim(ts_select)[1]/equal_size_nRow)
+  if(prod(dim(ts_select)) > maxDataPoints){
+    nm <- nm + 1
     cat(paste0(paste0(
       "Due to large matrix size, data is splitted into ", 
-      nm+1, " small matrices ... \n")
+      nm, " small matrices ... \n")
     ))
+    
     ts_parts <- list()
     i <- 1
-    while(nrow(ts_start) > equal_size_nRow){
-      ts_parts[[i]] <- ts_start[1:equal_size_nRow,]
-      ts_start <- ts_start[-(1:equal_size_nRow),]
+    while(nrow(ts_select) > equal_size_nRow){
+      ts_parts[[i]] <- ts_select[1:equal_size_nRow,]
+      ts_select <- ts_select[-(1:equal_size_nRow),]
       i <- i + 1
     }
-    ts_parts[[i]] <- ts_start[1:nrow(ts_start),]
-    ts_start <- ts_parts
+    ts_parts[[i]] <- ts_select[1:nrow(ts_select),]
+    ts_select <- ts_parts
     rm(ts_parts)
     gc()
   }  else {
-    ts_start <- list(ts_start)
+    ts_select <- list(ts_select)
   }
   
   cat(paste0(
@@ -142,9 +152,9 @@ dynamic_per_pixel <- function(
     t_doy = t_doy,
     days_around_ma = days_around_ma
   )
-
-  cat(paste0("Processing ", nm+1, " matrices ... \n"))
-  df_out <- lapply(ts_start, function(x){
+  
+  cat(paste0("Processing ", nm, " matrices ... \n"))
+  df_out <- lapply(ts_select, function(x){
     cat(" | matrix done")
     lake_output <- lapply(seq_along(ipa), function(i){
       imagesUsed <- which(ipa[[i]])
@@ -183,27 +193,45 @@ dynamic_per_pixel <- function(
   }
   periodPerDay <- rep(daysOfPeriod, dayRepeats)
   removeValues <- (1:365)[periodPerDay > days_around_ma / 4]
- 
-
+  
   if(length(removeValues) > 1){
     df_out[removeValues,] <- NA 
   }
- 
-  colnames(df_out) <- paste0("p_", 1:ncol(df_out))
-  df_out <- cbind("doy" = 1:365, df_out)
- 
+  
+  colnames(df_out) <- paste0("p_", pixel_selection_i)
+  lakeDynamic <- data.frame("doy" = 1:365, 
+                            "mean" = rowMeans(df_out, na.rm = TRUE))
+  quantProbs <-  c(0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.975)
+  value_stats <- t(
+    apply(
+      X = df_out, 
+      MARGIN = 1, 
+      FUN = quantile, 
+      probs = quantProbs, 
+      names = FALSE,
+      na.rm = TRUE
+    )
+  ) 
+  colnames(value_stats) <- paste0("q_", quantProbs)
+  lakeDynamic <- cbind(lakeDynamic, value_stats)
+  
   i_col <- ceiling(pixel_selection_i/ d[1])
   i_row <- pixel_selection_i - d[1] * (i_col - 1)
   
-  list("moving_averages" = df_out,
-       "raster_location" = data.frame(
-         "pixel" = colnames(df_out)[2:ncol(df_out)],
-         "i_col" = i_col,
-         "i_row" = i_row,
-         "valid_values" = valid_values[pixel_selection_i]),
-       "meta" = c("days_around_ma" = days_around_ma, 
-                  "threshold_value" = threshold)
+  output <- list(
+    "lakeDynamic" = lakeDynamic,
+    "crs" = imageIndex$crs,
+    "year" = year,
+    "days_around_ma" = days_around_ma,
+    "dataAvailabilityThreshold" = threshold
   )
+  if(returnSinglePixels){
+    pixelDynamics <- as.list(as.data.frame(df_out))
+    output[["x"]] <- imageIndex$x[i_col]
+    output[["y"]] <- imageIndex$y[i_row]
+    output[["pixelDynamics"]] <- pixelDynamics
+  } 
+  output
 }
 
 #' Subset of all images to be used for moving averages for each day
@@ -227,17 +255,4 @@ images_per_ma <- function(t_doy, days_around_ma){
   })
 }
 
-#' Set values NA by SCL
-#' 
-#' @param indexImage,sclImage Index and SCL layer of the image
-#' @param bands Numeric vector specifiyng the SCL categories to filtered for
-#' @param invert If TRUE the filtering is inverted -> specefied bands are removed
-#' 
-scl_filter <- function(indexImage, sclImage, bands, invert = FALSE){
-  if(invert){
-    indexImage[!(sclImage %in% bands)] <- NA
-  } else {
-    indexImage[!(sclImage %in% bands)] <- NA
-  }
-  indexImage
-}
+

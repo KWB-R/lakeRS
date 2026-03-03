@@ -2,7 +2,7 @@
 #' 
 #' Based on the reduction of within cluster sum of squares
 #' 
-#' @param dpp The output of [dynamic_per_pixel()]
+#' @param pixelDynamic The pixel data table of the output of [dynamic_per_pixel()]
 #' @param kMax Tha maximum number of clusters to be tested
 #' @param minimum_clusterSize The minimum size of a cluster allowed. By default
 #' 1% of all moving average pixels, need to be in a cluster. 
@@ -28,17 +28,18 @@
 #' @export
 #' 
 best_nk <- function(
-    dpp, kMax = 10, minimum_clusterSize = 0.01, plot_result = TRUE, correlate_first = FALSE
+    pixelDynamic, kMax = 10, minimum_clusterSize = 0.01, plot_result = TRUE, 
+    correlate_first = FALSE
 ){
   y <- prepare_for_clustering(
-    moving_averages_matrix = dpp$moving_averages[,-1], 
+    moving_averages_matrix = do.call(cbind, pixelDynamic), 
     correlate_first = correlate_first, 
     maxPixels = 10000
   )
   
   i <- 1
   kmeansOutput <- kmeans(t(y), centers = i, iter.max = 20, nstart = 2)
-  wcss <-withinBetween <- kmeansOutput$betweenss / kmeansOutput$totss
+  wcss <- withinBetween <- kmeansOutput$betweenss / kmeansOutput$totss
   while(all(kmeansOutput$size > minimum_clusterSize * ncol(y))){
     if(i > kMax){
       break
@@ -46,7 +47,7 @@ best_nk <- function(
     i <- i + 1
     cat(paste0("Calculation of ", i, ifelse(i == 1, " cluster", " clusters"), " ... \n"))
     kmeansOutput <- kmeans(t(y), centers = i, iter.max = 20, nstart = 2)
-   
+    
     withinBetween <- kmeansOutput$betweenss / kmeansOutput$totss
     wcss <- c(wcss, withinBetween)
   }
@@ -80,44 +81,46 @@ best_nk <- function(
 
 #' cluster analysis (k-means) and map layer
 #' 
-#' @param dpp The output of [dynamic_per_pixel()]
-#' @param nc The netCDF data list created by [load_netcdf()]
+#' @param pixelDynamic The pixel data table of the output of [dynamic_per_pixel()]
+#' @param nc The netCDF data list created by [open_netcdf()]
 #' @param k The number of Clusters
 #' @param iter.max,nstart Arguments of [kmeans()]
 #' @param correlate_first If TRUE, Pearson correlation between pixels will be 
 #' used for clustering instead of Index values. This results in a clustering 
 #' based on different shapes of the dynamic. 
-#' @param whole_dynamic If TREU all 365 days average values will be used to 
+#' @param whole_dynamic If TRUE all 365 days average values will be used to 
 #' compare pixels. Otherwise the number of days will be reduced if the number
 #' of pixels is too high (> 100 000).
 #' 
-#' @return A list of the k-means output and a layer of clusted pixels
+#' @return A list of the k-means output and a layer of clustered pixels
 #' 
 #' @importFrom stats kmeans cor
 #' 
 #' @export
 #' 
 pixel_clusters <- function(
-    dpp, nc, k, iter.max = 20, nstart = 10, correlate_first = FALSE, 
+    pixelDynamic, nc, k, iter.max = 20, nstart = 10, correlate_first = FALSE, 
     whole_dynamic = FALSE
 ){
   
+  
   keep <- 1:365
   if(!whole_dynamic){
-    proportionToRemove <- 100000 / ncol(dpp$moving_averages)
+    proportionToRemove <- 100000 / length(pixelDynamic)
     i_d <- ceiling(1 / proportionToRemove)
     if(i_d > 10){
       i_d <- 10
     }
     keep <- seq(i_d, 365, i_d)
-    dpp$moving_averages <- dpp$moving_averages[keep,]
-    cat(paste0("due to large pixel number ", 365 - length(keep), 
-               " days removed before clustering ... \n")
-    )
+    if(i_d > 1L){
+      cat(paste0("Due to large pixel number ", 365 - length(keep), 
+                 " days removed before clustering ... \n")
+      )
+    } 
   }
   
   y <- prepare_for_clustering(
-    moving_averages_matrix = dpp$moving_averages[,-1], 
+    moving_averages_matrix = do.call(cbind, pixelDynamic)[keep,], 
     correlate_first = correlate_first, 
     maxPixels = NULL
   )
@@ -127,17 +130,13 @@ pixel_clusters <- function(
     x = t(y), centers = k, iter.max = iter.max, nstart = nstart
   )
   
-  m_init <- matrix(data = 0, nrow = length(nc$y), ncol = length(nc$x))
-  up <- dpp$raster_location
-  for(i in seq_along(kmeansOutput$cluster)){
-    m_init[up$i_row[up$pixel == names(kmeansOutput$cluster)[i]],
-           up$i_col[up$pixel == names(kmeansOutput$cluster)[i]]] <- 
-      kmeansOutput$cluster[i]
-  }
-  
   list(
-    "kmeans" = kmeansOutput,
-    "cluster_layer" = m_init,
+    "clusterVector" = kmeansOutput$cluster,
+    "clusterCenter" = t(kmeansOutput$centers),
+    "kmeansOut" = kmeansOutput[-grep(
+      pattern = "cluster|centers", 
+      x = names(kmeansOutput))
+    ],
     "days_included" = keep)
 }
 
@@ -188,7 +187,6 @@ prepare_for_clustering <- function(
               " prior to cluster analysis")
     }
   }
- 
   
   if(!is.null(maxPixels)){
     set.seed(1)
@@ -206,21 +204,6 @@ prepare_for_clustering <- function(
     }
     cat(paste0("correlation of ", ncol(ts_table), " pixels ... \n"))
     y <- t(cor(x = ts_table, y = ts_reference, use = "pairwise.complete.obs"))
-    
-    
-    # remove pixels that have a low correlation to almost "all" others
-    # highCor <- apply(y, 2, quantile, p = 0.95)
-    # )
-    # cat(paste0(
-    #   sum(highCor < 0.95), " pixels of ", ncol(y), " pixels identified as ",
-    #   "outlier and removed ... \n")
-    # )
-    # 
-    # # maxCor <- apply(y, 2, max)
-    # # maxCor >= 0.99
-    # 
-    # sum(which(maxCor < 0.99) %in% which(highCor < 0.95))
-    # y <- round(y[,highCor >= 0.95], 5)
     y <- round(y, 5)
   } else {
     y <- ts_table

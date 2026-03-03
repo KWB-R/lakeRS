@@ -2,44 +2,68 @@
 % Please edit documentation in R/plot_dynamic.R
 \name{plot_dynamic}
 \alias{plot_dynamic}
-\title{Plot the moving average dynamic of an index}
+\title{Plot dynamic time series with uncertainty intervals for environmental data}
 \usage{
 plot_dynamic(
-  dpp,
+  v_averageList,
+  v_sdList = NULL,
+  df_q50List = NULL,
+  df_q95List = NULL,
+  TScolors = lakeRS::tenClusterColors$color,
+  TSnames = NULL,
+  df_reference = NULL,
+  RefName = NULL,
   lakeName = "",
   ylab = "Index",
-  pixelClusters = NULL,
-  ylim = NULL,
-  singlePixels = FALSE,
-  smallBandOnly = FALSE
+  ylim = NULL
 )
 }
 \arguments{
-\item{dpp}{The dynamic per pixel output by \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
+\item{v_averageList}{List of numeric vectors (length 365); medians/averages
+per day of year. Single vectors are automatically wrapped in a list.}
 
-\item{lakeName}{String defining the title of the plot}
+\item{v_sdList}{List of numeric vectors (length 365), or NULL. Standard
+deviations per day. Auto-generates \code{df_q50List} (IQR via 0.674 x sd) and
+\code{df_q95List} (1.96 x sd).Single vectors coerced to lists.
+Default: NULL (no uncertainty shading).}
 
-\item{ylab}{y axis name}
+\item{df_q50List}{List of data.frames (365 rows, 2 cols: "q_0.25", "q_0.75"),
+or NULL/single data.frame.50\% quantile intervals. Takes precedence if both
+quantile lists provided.}
 
-\item{pixelClusters}{Optional: Named Integer vector of clusters. Names
-according to the pixel names (column names in the dpp$moving_average table).
-If pixelClusters are provided the dynamic is plotted for each cluster
-separately.}
+\item{df_q95List}{List of data.frames (365 rows, 2 cols: "q_0.025", "q_0.975"),
+or NULL/single data.frame. 95\% quantile intervals.}
 
-\item{ylim}{Optional manual definition of the y-axes dimension.}
+\item{TScolors}{Character vector of colors for time series (default:
+\code{lakeRS::tenClusterColors$color}).Recycled to match \code{v_averageList}
+length.}
 
-\item{singlePixels}{If True lines will be drawn for single pixel dynamics
-in addition to the interval}
+\item{TSnames}{Character vector of names for legend entries (time series),
+or empty string/NULL (no legend). Length should match \code{v_averageList}.}
 
-\item{smallBandOnly}{smallBandOnly TRUE means that only the 50\% range of data
-(25th to 75th percentile) and median value are plotted.}
+\item{df_reference}{Data.frame (optional; cols: day 1-365, reference values),
+e.g., ground truth data.}
+
+\item{RefName}{Character; legend name for reference line (dashed, black).
+Default: NULL.}
+
+\item{lakeName}{Character; plot title prefix (e.g., lake identifier).
+Default: "".}
+
+\item{ylab}{Character; y-axis label (e.g., "Chlorophyll-a Index").
+Default: "Index".}
+
+\item{ylim}{Numeric vector (2 elements); manual y-limits.
+Auto-computed with 10\% padding if NULL.}
+}
+\value{
+Invisible NULL (plots directly; no return value).
+Legend positioned dynamically at top-left.
 }
 \description{
-Plot the moving average dynamic of an index
-}
-\details{
-A maximum of 5000 timeseries will be drawn as single lines. If more data is
-available 5000 timeseries are randomly drawn. The transparency of each single line
-depends on the number of lines to be drawn (the more lines, the higher the
-transparency)
+Creates a base R plot visualizing multiple time series (medians/averages)
+over 365 days of the year,with optional 50\% and/or 95\% quantile intervals as
+shaded polygons, monthly separators, and an optional reference line
+(e.g., pixel data).
+Auto-generates quantile data.frames from mean/sd.
 }

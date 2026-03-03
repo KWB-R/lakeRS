@@ -5,7 +5,7 @@
 \title{cluster analysis (k-means) and map layer}
 \usage{
 pixel_clusters(
-  dpp,
+  pixelDynamic,
   nc,
   k,
   iter.max = 20,
@@ -15,9 +15,9 @@ pixel_clusters(
 )
 }
 \arguments{
-\item{dpp}{The output of \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
+\item{pixelDynamic}{The pixel data table of the output of \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
 
-\item{nc}{The netCDF data list created by \code{\link[=load_netcdf]{load_netcdf()}}}
+\item{nc}{The netCDF data list created by \code{\link[=open_netcdf]{open_netcdf()}}}
 
 \item{k}{The number of Clusters}
 
@@ -27,12 +27,12 @@ pixel_clusters(
 used for clustering instead of Index values. This results in a clustering
 based on different shapes of the dynamic.}
 
-\item{whole_dynamic}{If TREU all 365 days average values will be used to
+\item{whole_dynamic}{If TRUE all 365 days average values will be used to
 compare pixels. Otherwise the number of days will be reduced if the number
 of pixels is too high (> 100 000).}
 }
 \value{
-A list of the k-means output and a layer of clusted pixels
+A list of the k-means output and a layer of clustered pixels
 }
 \description{
 cluster analysis (k-means) and map layer

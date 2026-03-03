@@ -5,25 +5,21 @@
 \title{The moving average dynamic of an RS index}
 \usage{
 dynamic_per_pixel(
-  ncImage,
-  t_date,
-  years,
+  imageIndex,
+  nc,
   water_scenes_only = TRUE,
-  days_around_ma = NULL,
+  days_around_ma = 20,
   maxPixels = 1000,
+  pixelFilter = NULL,
   threshold = NULL,
-  lakeInfo = c("", ""),
-  maxDataPoints = 5e+06
+  maxDataPoints = 5e+06,
+  returnSinglePixels = TRUE
 )
 }
 \arguments{
-\item{ncImage}{the data list created by \code{\link[=ndi_per_image]{ndi_per_image()}},
-which must contain the SCL layer if water_scenes_only is TRUE.}
+\item{imageIndex}{the data list created by \code{\link[=ndi_per_image]{ndi_per_image()}}}
 
-\item{t_date}{A vector of the dates of images. This is part of the output
-of \code{\link[=load_netcdf]{load_netcdf()}}, with the list name "t_date".}
-
-\item{years}{Numeric vector of all the years to be included}
+\item{nc}{The netcdf list returned by \code{\link[=open_netcdf]{open_netcdf()}}}
 
 \item{water_scenes_only}{By default only pixels classified as water scene are
 used for the yearly average per pixel. If False, all values are included
@@ -37,17 +33,20 @@ median available values per pixel.}
 \item{maxPixels}{Maximum number of pixels (randomly chosen from available pixels).
 If Inf, all pixels will be analysed.}
 
+\item{pixelFilter}{The ID of pixels to be used (The ID of a pixel is its
+its number in the the original matrix of the netcdf).}
+
 \item{threshold}{The mininum number of valid values for one pixel to be
 processed (the higher the days around moving averages are, the lower this
 threshold can be)}
 
-\item{lakeInfo}{Character vector of length 2 specifying the Name and the ID
-of the lake. This is not needed for any calculation but is important to
-identify the lake.}
-
 \item{maxDataPoints}{The number of datapoints to be part of one matrix
 for moving average calculation. The default (5E+06) corresponds to 5000 pixels
 in 1000 images.}
+
+\item{returnSinglePixels}{If TRUE (default) moving average dynamic of each
+pixel (up to the number of maxPixels) is returned. If False only median and
+some quantiles are returned.}
 }
 \description{
 The dynamic can include many years, all sorted by the day of the year.

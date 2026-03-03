@@ -17,7 +17,7 @@
 #' @importFrom tidyr spread
 #' @export
 #' 
-ndtri_spread <- function(
+index_spread <- function(
     df, aggregationType = "modus", filterPixels = 0, filterImages = 0, 
     filterQuality = 0
 ){

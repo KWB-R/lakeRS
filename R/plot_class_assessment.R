@@ -1,9 +1,9 @@
-#' Plot the numeric EO eutriphication assessment for one lake
+#' Plot class assessment results of lakes
 #' 
 #' Lake can be selected either by Name, ID or the rownumber in the assessment table
 #' 
 #' @param class_assessment The numeric assessment list created by 
-#' [EO_assessment_numeric]
+#' [discreteClassAssessment()]
 #' @param lakeNames,lakeIDs,rowNumbers One or more of those can be defined as 
 #' character vector for lakeNames and lakeIDs or numeric vectors for rowNUmbers.
 #' Different filters can be combined

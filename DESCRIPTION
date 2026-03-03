@@ -24,9 +24,8 @@ Imports:
     htmlwidgets,
     leaflet,
     openeo,
-    raster,
-    ncdump,
-    methods
+    terra
 Depends: 
     R (>= 4.0.0)
 LazyData: true
+LazyDataCompression: bzip2

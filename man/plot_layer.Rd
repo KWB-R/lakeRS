@@ -20,7 +20,7 @@ plot_layer(
 the netCDF file. It can be a band of netCDF or further processed layer. It
 contant of the matrix can either be numerical or characters of hex colors.}
 
-\item{nc}{The netCDF data list created by \code{\link[=load_netcdf]{load_netcdf()}}}
+\item{nc}{The netCDF data list created by \code{\link[=open_netcdf]{open_netcdf()}}}
 
 \item{lowerLimits}{Lower limits of value classes. If NULL (default) colors
 will be scaled according to numerical values.}
@@ -36,8 +36,8 @@ values.}
 
 \item{legendTitle}{Character string for legend title}
 
-\item{plotLegend}{If TRUE legend will be plotted. If now aboveValues and no
-valueRange are spefecied. No legend will be plotted.}
+\item{plotLegend}{If TRUE legend will be plotted. If no lowerLimits and no
+valueRange are specefied. No legend will be plotted.}
 }
 \description{
 The plot is the layer on top of a leaflet map. The color scheme can
@@ -47,7 +47,7 @@ be done for numeric or categorical values.
 Use case: Proportions of a scene.
 The above values and correspoding colors need to be specified. If for example
 values between 0 and 0.5 (50\%) should bewhite, values between 0.5 and 0.75
-should be yellow and values above 0.75 should be purple, aboveValues are
-c(0, 0.5, 0.75) and the aboveColors arec("white", "yellow", "purple").
+should be yellow and values above 0.75 should be purple, lowerLimits are
+c(0, 0.5, 0.75) and the classColors arec("white", "yellow", "purple").
 In that case a legendTitle is recommended to explain what is displayed.
 }

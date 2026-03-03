@@ -5,7 +5,7 @@
 \title{Find the number of clusters to use in kmeans}
 \usage{
 best_nk(
-  dpp,
+  pixelDynamic,
   kMax = 10,
   minimum_clusterSize = 0.01,
   plot_result = TRUE,
@@ -13,7 +13,7 @@ best_nk(
 )
 }
 \arguments{
-\item{dpp}{The output of \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
+\item{pixelDynamic}{The pixel data table of the output of \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
 
 \item{kMax}{Tha maximum number of clusters to be tested}
 

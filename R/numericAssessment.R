@@ -1,7 +1,7 @@
 #' The assessment of eutriphication based on NDTrI Values
 #' 
 #' @param yearly_spread A dataframe of lakeName, lakeID and the yearly NDTrI 
-#' values as created by [ndtri_spread()]
+#' values as created by [index_spread()]
 #' @param statusYears The number of years used for the moving average. By default 
 #' this is 3 years.
 #' @param shortTermYears The number of years used for the short-term trend.
@@ -30,37 +30,73 @@
 #' 
 #' @export
 #' 
-EO_assessment_numeric <- function(
+numericAssessment <- function(
     yearly_spread, statusYears = 3, shortTermYears = 3, longTermYears = 10
 ){
-  St <- determine_status(
-    yearly_spread = yearly_spread, 
-    n_years = statusYears
-  )
-  Tr <- determine_trend(
-    yearly_spread = yearly_spread, 
-    shortTerm = shortTermYears, 
-    longTerm = longTermYears
-  )
-  
-  list(
-    "assessment" = 
-      do.call(cbind, list(
-        yearly_spread, 
-        St$status, 
-        Tr$trends)
-      ),
-    "periods" = c(unlist(St["nYears"]), Tr$periods),
-    "overallMedian" = Tr$overallMedian,
-    "yearlyMedians" = Tr$yearlyMedians
-  )
+  first_year_column <- min(grep(pattern = "^year_",colnames(yearly_spread)))
+  last_year_column <- ncol(yearly_spread)
+  available_years <- last_year_column - first_year_column + 1
+  if(available_years < statusYears){
+    warning("Status calculation not possible, only ", available_years, 
+            " years available.")
+    yearly_spread$status<- NA
+  } else {
+    cat("Calculate status of available years ... \n")
+    St <- determine_status(
+      yearly_spread = yearly_spread, 
+      n_years = statusYears
+    )
+    yearly_spread <- cbind(yearly_spread, St$status)
+  }
+  if(available_years < shortTermYears){
+    warning("Trend calculation not possible, only ", available_years, 
+            " years available.")
+    sTrend <- lTrend <- NA
+    yearly_spread$trend_short <- yearly_spread$trend_long <- NA
+  } else {
+    cat(paste0(
+      "Calculate short-term trend over ", shortTermYears," years ... \n")
+    )
+    sTrend <- determine_trend(
+      yearly_spread = yearly_spread, 
+      tyears = shortTermYears, 
+      ttype = "short"
+    )
     
+    yearly_spread <- cbind(yearly_spread, sTrend$trends)
+    
+  }
+  
+  if(available_years < longTermYears){
+    yearly_spread$trend_long <- NA
+    warning("Long-term trend calculation not possible, only ", available_years, 
+            " years available.")
+  } else {
+    cat(paste0(
+      "Calculate long-term trend over ", longTermYears," years ... \n")
+    )
+    lTrend <- determine_trend(
+      yearly_spread = yearly_spread, 
+      tyears = longTermYears, 
+      ttype = "long"
+    )
+    yearly_spread <- cbind(yearly_spread, lTrend$trends)
+    yearly_spread
+    
+  }
+  list(
+    "assessment" = yearly_spread,
+    "periods" = c("status" = statusYears, 
+                  "shortTerm" = shortTermYears, 
+                  "longTerm" = longTermYears
+    )
+  )
 }
 
-#' The status of NDTrI is determined as moving average over n years
+#' The average status of an index over n years
 #' 
-#' @param yearly_spread A dataframe of lakeName, lakeID and the yearly NDTrI 
-#' values as created by [ndtri_spread()]
+#' @param yearly_spread A dataframe of lakes or pixels as row and the yearly 
+#' index values as columns as created by [index_spread()]
 #' @param n_years The number of years used for the moving average. By defaul 
 #' this is 3 years.
 #' 
@@ -70,7 +106,6 @@ EO_assessment_numeric <- function(
 #' A matrix, where number of rows equal the number of lakes (in the same order
 #' as in the yearly_spread input table) and number of correspond to the number
 #' of years assessed
-#' 
 #' 
 determine_status <- function(
     yearly_spread, n_years = 3
@@ -86,24 +121,22 @@ determine_status <- function(
     paste0(colnames(yearly_spread)[(first_year_column + n_years - 1):last_year_column], "_status")
   list("status" = df_out,
        "nYears" = n_years)
+  
 }
 
-#' The Trend of NDTrI is determined within a coelleciton of lakes in short and
-#' long-term
+#' Trend of an Index over years
 #' 
-#' 
-#' 
-#' @param yearly_spread A dataframe of lakeName, lakeID and the yearly NDTrI 
-#' values as created by [ndtri_spread()]
-#' @param shortTerm The number of years used for the short-term trend.
-#' @param longTerm The number of years used for the short-term trend.
+#' @param yearly_spread A data frame of lakes or pixels as row and the yearly 
+#' index values as columns as created by [index_spread()]
+#' @param tyears The number of years used for the trend analysis.
+#' @param ttype The type of trend (either "short" or "long") as character string
 #' 
 #' @details
 #' In order to rule out systematic errors based on weather conditions in a year,
 #' different hardware or algorithms, the difference between the overall median 
-#' value of all lakes and years and the yearly median value of all lakes is 
-#' added to the NDTrI of a lake before the trends are calculated. Median values
-#' are based on lakes or pixels for which data is available in all considered 
+#' value of all lakes (or all pixels) and years and the yearly median value of 
+#' all lakes(or all pixels) is added to the Index of a lake (or pixel) before 
+#' the trends are calculated. Median values are based on lakes or pixels for which data is available in all considered 
 #' years.
 #' Subsequantly, the trend is calculated as linear regression between previous
 #' years and adjusted NDTrI values.
@@ -122,7 +155,12 @@ determine_status <- function(
 #' 
 #' @importFrom stats lm
 #' 
-determine_trend <- function(yearly_spread = yearly_spread, shortTerm = 3, longTerm = 10){
+determine_trend <- function(
+    yearly_spread = yearly_spread, tyears = 3, ttype = "short"
+){
+  if(!(ttype %in% c("short", "long"))){
+    stop("ttype needs to be either 'short' or 'long'.")
+  }
   single_year_columns <- grep(pattern = "^year_", 
                               x = colnames(yearly_spread))
   
@@ -133,64 +171,39 @@ determine_trend <- function(yearly_spread = yearly_spread, shortTerm = 3, longTe
   yearly_medians <- apply(mat[all_years_available,], 2, median)
   yearly_shift <- overall_median - yearly_medians
   
-  if(shortTerm > ncol(mat)){
-    shortTerm <- ncol(mat)
+  if(tyears >= ncol(mat)){
+    tyears <- ncol(mat)
   }
-  if(longTerm > ncol(mat)){
-    longTerm <- ncol(mat)
-  }
+  tyearsColumns <- (ncol(mat) - tyears:1 + 1)
+  tyearsMat <- mat[,tyearsColumns]
   
-  shortTermColumns <- (ncol(mat) - shortTerm:1 + 1)
-  longTermColumns <- (ncol(mat) - longTerm:1 + 1)
-  
-  shortTermMat <- mat[,shortTermColumns]
-  longTermMat <- mat[,longTermColumns]
-  
-  
-  output <- t(sapply(1:nrow(mat), function(i){
-    c_short <- 
-      if(any(is.na(shortTermMat[i,]))){
-      c("trend_short" = NA,
-        "error_short" = NA)
+  c_out <- t(sapply(1:nrow(tyearsMat), function(i){
+    if(any(is.na(tyearsMat[i,]))){
+      v <- c(NA,NA)
     } else {
       dfs <- data.frame(
-        "Year" = colnames(shortTermMat),
-        "NDTrI" = shortTermMat[i,],
-        "NDTrI_adjusted" = shortTermMat[i,] + yearly_shift[shortTermColumns],
-        "years_passed" = -(shortTerm - 1):0
+        "Year" = colnames(tyearsMat),
+        "NDTrI" = tyearsMat[i,],
+        "NDTrI_adjusted" = tyearsMat[i,] + yearly_shift[tyearsColumns],
+        "years_passed" = -(tyears - 1):0
       )
       st <- summary(lm(NDTrI_adjusted ~ years_passed, data = dfs))
-      c("trend_short" = st$coefficients[2,1],
-        "error_short" = st$coefficients[2,2])
+      v <- c(st$coefficients[2,1], st$coefficients[2,2])
     }
-    c_long <- 
-      if(any(is.na(longTermMat[i,]))){
-        c("trend_long" = NA,
-          "error_long" = NA)
-      } else {
-        dfl <- data.frame(
-          "Year" = colnames(longTermMat),
-          "NDTrI" = longTermMat[i,],
-          "NDTrI_adjusted" = longTermMat[i,] + yearly_shift[longTermColumns],
-          "years_passed" = -(longTerm - 1):0
-        )
-        lt <- summary(lm(NDTrI_adjusted  ~ years_passed, data = dfl))
-        c("trend_long" = lt$coefficients[2,1],
-          "error_long" = lt$coefficients[2,2])
-      }
-    c(c_short, c_long)
+    names(v) <- c(paste0("trend_", ttype), paste0("error_", ttype))
+    v
   }))
-  
-  list("trends" = output,
-       "periods" = c("shortTerm" = shortTerm, "longTerm" = longTerm),
+  list("trends" = c_out,
+       "periodYear" = tyears,
        "overallMedian" = overall_median,
        "yearlyMedians" = yearly_medians)
+  
 }
 
 
 #' Turn numerical trends into trend significance classes
 #'
-#' @param assessmentTable The output table created by [EO_assessment_numeric()]
+#' @param assessmentTable The output table created by [numericAssessment()]
 #' @param trendType Character string. Either "long" long-term or "short" for 
 #' short-term
 #' 
@@ -246,7 +259,6 @@ trends_to_classes <- function(assessmentTable, trendType = "long"){
   assessmentTable[[paste0("trend_", trendType, "_strength")]] <- 
     abs(assessmentTable[[paste0("trend_", trendType, "_significance")]]) * 
     assessmentTable[[columnNames[1]]] * -1
-    
   
   assessmentTable
 }

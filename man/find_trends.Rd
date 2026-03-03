@@ -6,19 +6,18 @@
 \usage{
 find_trends(
   numericAssessment,
-  trendPeriod,
-  trendType = "better",
+  trendType,
+  decreasing = FALSE,
   outputVector = "lakeID"
 )
 }
 \arguments{
 \item{numericAssessment}{The numeric assessment list created by
-\link{EO_assessment_numeric}}
+\code{\link[=numericAssessment]{numericAssessment()}}}
 
-\item{trendPeriod}{Either "short" or "long"}
+\item{trendType}{Either "short" or "long"}
 
-\item{trendType}{Either "better" or "worse" for good or bad trends,
-respectively}
+\item{decreasing}{logical, sort order increasing or decreasing (default)?}
 
 \item{outputVector}{One of "lakeID" (default), "lakeName" or "rowNumber"}
 }

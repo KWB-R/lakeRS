@@ -4,10 +4,10 @@
 \alias{bbox_from_point}
 \title{Bounding Box from point coordinate}
 \usage{
-bbox_from_point(lon, lat, meters = 20)
+bbox_from_point(lat, lon, meters = 20)
 }
 \arguments{
-\item{lon, lat}{Longitude and latitude in WGS 84 EPSG:4326}
+\item{lat, lon}{Latitude and longitude in WGS 84 EPSG:4326}
 
 \item{meters}{The distance around the point to create the bounding box.
 Needs to be > 0.}

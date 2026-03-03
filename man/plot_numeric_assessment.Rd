@@ -5,18 +5,21 @@
 \title{Plot the numeric EO eutriphication assessment for one lake}
 \usage{
 plot_numeric_assessment(
-  numeric_assessment,
+  numericData,
   lakeName = NULL,
   lakeID = NULL,
-  rowNumber = NULL
+  rowNumber = NULL,
+  ylab = "Index"
 )
 }
 \arguments{
-\item{numeric_assessment}{The numeric assessment list created by
-\link{EO_assessment_numeric}}
+\item{numericData}{The numeric assessment list created by
+\code{\link[=numericAssessment]{numericAssessment()}}}
 
 \item{lakeName, lakeID, rowNumber}{One of those need to be defined to select
 the lake to be plotted}
+
+\item{ylab}{Y axis lable}
 }
 \description{
 Lake can be selected either by Name, ID or the rownumber in the assessment table

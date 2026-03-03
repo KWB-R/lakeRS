@@ -90,3 +90,15 @@ tenClusterColors <- data.frame(
 
 
 usethis::use_data(tenClusterColors, overwrite = TRUE)
+
+# scene IDs
+sceneIDs <- data.frame(
+  "scl" = 
+    0:11, 
+  "name" = 
+    c("No Data", "Defective", "Topo Shadows", "Cloud Shaodows",
+      "Vegetation", "Bare Soil", "Water", "Unclassified", "Cloud Medium", 
+      "Cloud High", "Thin Cirrus", "Snow or Ice")
+)
+
+usethis::use_data(sceneIDs)

@@ -2,10 +2,11 @@
 #' 
 #' Lake can be selected either by Name, ID or the rownumber in the assessment table
 #' 
-#' @param numeric_assessment The numeric assessment list created by 
-#' [EO_assessment_numeric]
+#' @param numericData The numeric assessment list created by 
+#' [numericAssessment()]
 #' @param lakeName,lakeID,rowNumber One of those need to be defined to select
 #' the lake to be plotted
+#' @param ylab Y axis lable
 #' 
 #' @importFrom grDevices dev.new rgb
 #' @importFrom graphics axis layout points polygon
@@ -13,41 +14,52 @@
 #' @export
 #' 
 plot_numeric_assessment <- function(
-    numeric_assessment, lakeName = NULL, lakeID = NULL, rowNumber = NULL
+    numericData, lakeName = NULL, lakeID = NULL, rowNumber = NULL, ylab = "Index"
 ){
-  assessment_df <- numeric_assessment$assessment
+  df <- numericData$assessment
   r <-
     if(!is.null(rowNumber)){
+      if("name" %in% colnames(df)){
+        lakeName <- unique(df$name)
+      }
       rowNumber
     } else if(!is.null(lakeName)){
-      which(assessment_df$lakeName == lakeName)
+      which(df$lakeName == lakeName)
     } else if(!is.null(lakeID)){
-      which(assessment_df$lakeID == lakeID)
+      which(df$lakeID == lakeID)
+      if("name" %in% colnames(df)){
+        lakeName <- unique(df$name)
+      }
     }
   
-  df_plot <- assessment_df[r,]
+  df_plot <- df[r,]
   status_columns <- grep(pattern = "_status$", x = colnames(df_plot))
   single_year_columns <- grep(pattern = "[0-9]$", colnames(df_plot))
   
   n_status_years <- length(status_columns)
   n_single_years <- length(single_year_columns)
   
-  stats <- sapply(X = assessment_df[,single_year_columns], 
+  stats <- sapply(X = df[,single_year_columns], 
                   quantile, 
                   probs = c(0,0.1, 0.25, 0.5, 0.75, 0.9, 1), na.rm = TRUE)
   
   dev.new(noRStudioGD = TRUE, width = 6, height = 4)
   
-  layout(mat = matrix(data = c(1,1,1,1,2,2,3,4), 
-                      nrow = 2, ncol = 4, byrow = TRUE), 
-         heights = c(0.2, 1))
-  par(mar = c(0,0,0,0))
-  plot(0,0,type ="n", xaxt = "n", xlab = "", yaxt = "n", ylab = "", bty = "n")
-  text(x = 0, y = 0, df_plot$lakeName, cex = 2)
-  
+  if(!is.null(lakeName)){
+    layout(mat = matrix(data = c(1,1,1,1,2,2,3,4), 
+                        nrow = 2, ncol = 4, byrow = TRUE), 
+           heights = c(0.2, 1))
+    par(mar = c(0,0,0,0))
+    plot(0,0,type ="n", xaxt = "n", xlab = "", yaxt = "n", ylab = "", bty = "n")
+    text(x = 0, y = 0, lakeName, cex = 2)
+  } else {
+    layout(mat = matrix(data = c(1,1,2,3), 
+                        nrow = 1, ncol = 4, byrow = TRUE), 
+           heights = c(0.2, 1))
+  }
   par(mar = c(4.1, 4.1, 1.1, 1.1))
   plot(x = 1:n_single_years, y = stats[5,], type = "n", 
-       ylim =range(stats), ylab = "NDTrI", xaxt = "n", xlab = "")
+       ylim =range(stats), ylab = ylab, xaxt = "n", xlab = "")
   polygon(x = c(1:n_single_years, n_single_years:1), 
           y = c(stats[1,], rev(stats[7,])), 
           col = rgb(208, 207, 253, 150, maxColorValue = 255, ), 
@@ -76,14 +88,14 @@ plot_numeric_assessment <- function(
   
   trendLim <- 
     max(abs(range(
-      c(assessment_df$trend_long - 1.96 * assessment_df$error_long,
-        assessment_df$trend_long + 1.96 * assessment_df$error_long),
+      c(df$trend_long - 1.96 * df$error_long,
+        df$trend_long + 1.96 * df$error_long),
       na.rm = TRUE
     ))) * c(-1,1)
   plot(
     x = 0, y = 0, type = "n", ylim = trendLim,
     ylab = paste0(
-      "Long-Term Trend (n = ", numeric_assessment$periods["longTerm"], ")"), 
+      "Long-Term Trend (n = ", numericData$periods["longTerm"], ")"), 
     xlab = "", xaxt = "n"
   )
   abline(h = 0, lty = "dashed")
@@ -96,14 +108,14 @@ plot_numeric_assessment <- function(
   
   trendLim <- 
     max(abs(range(
-      c(assessment_df$trend_short - 1.96 * assessment_df$error_short,
-        assessment_df$trend_short + 1.96 * assessment_df$error_short),
+      c(df$trend_short - 1.96 * df$error_short,
+        df$trend_short + 1.96 * df$error_short),
       na.rm = TRUE
     ))) * c(-1,1)
   plot(
     x = 0, y = 0, type = "n", ylim =  trendLim,
     ylab = paste0(
-      "Short-Term Trend (n = ", numeric_assessment$periods["shortTerm"], ")"),
+      "Short-Term Trend (n = ", numericData$periods["shortTerm"], ")"),
     xlab = "",xaxt = "n")
   abline(h = 0, lty = "dashed")
   points(x = 0, y = df_plot$trend_short, pch = 19, cex = 2)

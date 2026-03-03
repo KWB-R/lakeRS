@@ -2,13 +2,21 @@
 % Please edit documentation in R/plot_dynamic.R
 \name{rm_na_for_polygon}
 \alias{rm_na_for_polygon}
-\title{Remove NA values for polygon plotting}
+\title{Remove NA values symmetrically for polygon plotting}
 \usage{
 rm_na_for_polygon(x_v, y_v)
 }
 \arguments{
-\item{x_v, y_v}{vectors of x and y values of the polygon}
+\item{x_v}{Numeric vector; x-coordinates}
+
+\item{y_v}{Numeric vector; y-coordinates (same length as \code{x_v})}
+}
+\value{
+List with \code{x}, \code{y} (NA-stripped vectors of equal length).
 }
 \description{
-Remove NA values for polygon plotting
+Prepares x/y vectors for \code{\link[graphics:polygon]{polygon()}} by
+removing corresponding NAs from either vector while preserving order. Ensures
+closed polygons plot correctly despite missing data. Used internally by
+\code{\link{plot_dynamic}} for shaded uncertainty regions.
 }

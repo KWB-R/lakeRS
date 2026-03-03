@@ -7,9 +7,9 @@
 map_layer(
   ncLayer,
   nc,
-  aboveValues = NULL,
+  lowerLimits = NULL,
   highestValue = NULL,
-  aboveColors = NULL,
+  classColors = NULL,
   valueRange = NULL,
   legendTitle = NULL,
   plotLegend = TRUE
@@ -20,15 +20,15 @@ map_layer(
 the netCDF file. It can be a band of netCDF or further processed layer
 created by \code{\link[=waterscene_proportion]{waterscene_proportion()}}}
 
-\item{nc}{The netCDF data list created by \code{\link[=load_netcdf]{load_netcdf()}}}
+\item{nc}{The netCDF data list created by \code{\link[=open_netcdf]{open_netcdf()}}}
 
-\item{aboveValues}{Lower limits of value classes. If NULL (default)
+\item{lowerLimits}{Lower limits of value classes. If NULL (default)
 numerical values will be used.}
 
 \item{highestValue}{If Null the highest value is derived by the maximum of
 all available layer values. It can also be specified manually.}
 
-\item{aboveColors}{A vector of R-colors names corresponding to the value
+\item{classColors}{A vector of R-colors names corresponding to the value
 classes.}
 
 \item{valueRange}{Minimum and maximum values used for color scale of numeric
@@ -36,7 +36,7 @@ values.}
 
 \item{legendTitle}{Character string for legend title}
 
-\item{plotLegend}{If TRUE legend will be plotted. If now aboveValues and no
+\item{plotLegend}{If TRUE legend will be plotted. If now lowerLimits and no
 valueRange are spefecied. No legend will be plotted.}
 }
 \description{
@@ -47,7 +47,7 @@ be done for numeric or categorical values.
 Use case: Proportions of a scene.
 The above values and correspoding colors need to be specified. If for example
 values between 0 and 0.5 (50\%) should bewhite, values between 0.5 and 0.75
-should be yellow and values above 0.75 should be purple, aboveValues are
-c(0, 0.5, 0.75) and the aboveColors arec("white", "yellow", "purple").
+should be yellow and values above 0.75 should be purple, lowerLimits are
+c(0, 0.5, 0.75) and the classColors arec("white", "yellow", "purple").
 In that case a legendTitle is recommended to explain what is displayed.
 }

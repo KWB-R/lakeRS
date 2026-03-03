@@ -23,7 +23,7 @@ download_openEO_job <- function(
     title, path, recentJob = TRUE, ID = NULL, overwrite = FALSE
 ){
   if(dir.exists(file.path(path, title)) & !overwrite){
-    stop("Direcatory already exists and might contain data from previous jobs.")
+    stop("Directory already exists and might contain data from previous jobs.")
   }
   
   allJobs <- openeo::list_jobs()

@@ -2,7 +2,7 @@
 % Please edit documentation in R/seasonal_index_per_pixel.R
 \name{pixel_wise_average}
 \alias{pixel_wise_average}
-\title{NDTri per pixel}
+\title{Index per pixel}
 \usage{
 pixel_wise_average(list_of_mats, na.rm = FALSE)
 }
@@ -12,5 +12,5 @@ pixel_wise_average(list_of_mats, na.rm = FALSE)
 \item{na.rm}{Logical}
 }
 \description{
-NDTri per pixel
+Index per pixel
 }

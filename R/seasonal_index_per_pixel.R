@@ -1,17 +1,12 @@
 #' Calculate an index per pixel averaged over time
 #' 
-#' @param nc The netCDF data list created by [load_netcdf()]
-#' @param ncImage the data list created by [ndi_per_image()]
-#' @param years Numeric vector of all the years to be assessed
-#' @param seasonMonths Numeric vector including all months of the growing season
+#' @param imageIndex the data list created by [ndi_per_image()]
+#' @param nc The netcdf list returned by [open_netcdf()]
 #' @param water_scenes_only By default only pixels classified as water scene are 
 #' used for the yearly average per pixel. If False, all values are included no
 #' except for cloud and snow scenes.
 #' @param pixelQualityThreshold The quality is defined as the minimum proportion
 #' a pixel needs to be defined as water scene to be included.
-#' @param lakeInfo Character vector of length 2 specifying the Name and the ID
-#' of the lake. This is not needed for any calculation but is important to 
-#' identify the lake.
 #' 
 #' @return 
 #' A list of 
@@ -29,79 +24,70 @@
 #' @export
 #' 
 seasonal_index_per_pixel <- function(
-    nc, ncImage, years, seasonMonths = 4:10, 
-    water_scenes_only = TRUE, pixelQualityThreshold = 0.8, 
-    lakeInfo = c("", "")
+    imageIndex, nc, water_scenes_only = TRUE, pixelQualityThreshold = 0.8
 ){
   output <- list()
-  output[["lakeInfo"]] <- lakeInfo
+  #output[["lakeInfo"]] <- lakeInfo
+  imageMonths <- unique(as.numeric(format(imageIndex$t_date, "%m")))
+  imageYear <- unique(as.numeric(format(imageIndex$t_date, "%Y")))
   
-  for(year in years){
-    imageMonth <- as.numeric(format(nc$t_date, "%m"))
-    imageYear <- as.numeric(format(nc$t_date, "%Y"))
-    
-    timeFilter <- 
-      as.character(imageMonth) %in% as.character(seasonMonths) &
-      as.character(imageYear) == as.character(year)
-    
-    indexImages <- ncImage$RSindex[timeFilter]
-    sclImage <- ncImage$SCL[timeFilter]
-    
-
-    for(i in seq_along(indexImages)){
-      indexImages[[i]] <- if(water_scenes_only){
-        scl_filter(
-          indexImage = indexImages[[i]], 
-          sclImage = sclImage[[i]], 
-          bands = 6, 
-          invert = TRUE)
-      } else {
-        scl_filter(
-          indexImage = indexImages[[i]], 
-          sclImage = sclImage[[i]], 
-          bands = c(8:11))    
-      }
-    }
-    
-    if(water_scenes_only){
-      indexImages <- lapply(seq_along(indexImages), function(i){
-        indexImages[[i]][sclImage[[i]] != 6] <- NA
-        indexImages[[i]]
-      })
-    } else {
-      indexImages <- lapply(seq_along(indexImages), function(i){
-        indexImages[[i]][sclImage[[i]] %in% c(8:11)] <- NA
-        indexImages[[i]]
-      })     
-    }
-    
-    RSindex <- pixel_wise_average(
-      list_of_mats = indexImages, 
-      na.rm = TRUE
-    )
-    
-    waterLayer <- lakeRS::waterscene_proportion(scl_image = sclImage)
-
-    pixelFilter <- waterLayer$water >= pixelQualityThreshold
-    if(sum(pixelFilter) == 0L){
-      warning("No pixel meets the required water scene proportion defined as",
-      " quality threshold.")
-    }
-    RSindex[!pixelFilter] <- NA
-    
-    output[[paste0("y", year)]] <- list(
-      "RSindex" = RSindex,
-      "QualityThreshold" = pixelQualityThreshold, 
-      "minValuesPerPixel" = floor(pixelQualityThreshold *
-                                    (1 - median(waterLayer$NoFalseDisturbance)) * 
-                                    sum(timeFilter)),
-      "validPixel" = sum(pixelFilter)
-    )
+  cat("Loading values of SCL Band ... \n")
+  sclt <- load_BandLayer(
+    nc = nc, 
+    band = "SCL", 
+    monthFilter = imageMonths, 
+    yearFilter = imageYear
+  )
+  sclt$band[is.na(sclt$band)] <- 0
+  if(!all(imageIndex$t == sclt$t)){
+    stop("Something went wrong during timestamp filtering.")
   }
-  output
+  
+  imageIndex$RSindex <-
+    if(water_scenes_only){
+      mapply(
+        FUN = scl_filter, 
+        imageIndex$RSindex, 
+        sclt$band, 
+        bands = 6, invert = TRUE, 
+        SIMPLIFY = FALSE
+      )
+    } else {
+      mapply(
+        FUN = scl_filter, 
+        imageIndex$RSindex, 
+        sclt$band, 
+        bands = c(8:11), invert = FALSE, 
+        SIMPLIFY = FALSE
+      )
+    }
+  
+  RSindex <- pixel_wise_average(
+    list_of_mats = imageIndex$RSindex, 
+    na.rm = TRUE
+  )
+  
+  waterLayer <- lakeRS::waterscene_proportion(scl_image = sclt$band)
+  
+  pixelFilter <- waterLayer$water >= pixelQualityThreshold
+  if(sum(pixelFilter) == 0L){
+    warning("No pixel meets the required water scene proportion defined as",
+            " quality threshold.")
+  }
+  RSindex[!pixelFilter] <- NA
+  
+  list(
+    "x" = imageIndex$x,
+    "y" = imageIndex$y,
+    "crs" = imageIndex$crs,
+    "year" = imageYear,
+    "QualityThreshold" = pixelQualityThreshold, 
+    "RSindex" = RSindex,
+    "sceneProportions" = waterLayer
+  )
 }
 
-#' NDTri per pixel
+#' Index per pixel
 #' 
 #' @param list_of_mats A list of numeric matrices of the same size
 #' @param na.rm Logical

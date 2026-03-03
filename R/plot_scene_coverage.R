@@ -10,7 +10,7 @@
 #' @importFrom grDevices colorRampPalette
 #' @export
 #' 
-plot_image_dates <- function(
+plot_scene_coverage <- function(
     vDate, vCoverage = NULL, upperLimits = c(0.05, 0.1, 0.3, 0.5, 0.75, 1)
 ){
  

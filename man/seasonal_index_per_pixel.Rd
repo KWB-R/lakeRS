@@ -5,23 +5,16 @@
 \title{Calculate an index per pixel averaged over time}
 \usage{
 seasonal_index_per_pixel(
+  imageIndex,
   nc,
-  ncImage,
-  years,
-  seasonMonths = 4:10,
   water_scenes_only = TRUE,
-  pixelQualityThreshold = 0.8,
-  lakeInfo = c("", "")
+  pixelQualityThreshold = 0.8
 )
 }
 \arguments{
-\item{nc}{The netCDF data list created by \code{\link[=load_netcdf]{load_netcdf()}}}
+\item{imageIndex}{the data list created by \code{\link[=ndi_per_image]{ndi_per_image()}}}
 
-\item{ncImage}{the data list created by \code{\link[=ndi_per_image]{ndi_per_image()}}}
-
-\item{years}{Numeric vector of all the years to be assessed}
-
-\item{seasonMonths}{Numeric vector including all months of the growing season}
+\item{nc}{The netcdf list returned by \code{\link[=open_netcdf]{open_netcdf()}}}
 
 \item{water_scenes_only}{By default only pixels classified as water scene are
 used for the yearly average per pixel. If False, all values are included no
@@ -29,10 +22,6 @@ except for cloud and snow scenes.}
 
 \item{pixelQualityThreshold}{The quality is defined as the minimum proportion
 a pixel needs to be defined as water scene to be included.}
-
-\item{lakeInfo}{Character vector of length 2 specifying the Name and the ID
-of the lake. This is not needed for any calculation but is important to
-identify the lake.}
 }
 \value{
 A list of

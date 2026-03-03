@@ -25,3 +25,9 @@
 #' 
 #' 
 "tenClusterColors"
+
+#' Sentinel-2 IDs of the SCL Band 
+#' 
+#' @format A data frame of two columsn 1) SCL ID and 2) SCL name
+#' 
+"sceneIDs"

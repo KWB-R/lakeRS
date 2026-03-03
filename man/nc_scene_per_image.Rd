@@ -7,7 +7,7 @@
 nc_scene_per_image(nc, scene = "clouds")
 }
 \arguments{
-\item{nc}{The output of \code{\link[=load_netcdf]{load_netcdf()}} function}
+\item{nc}{The output of \code{\link[=open_netcdf]{open_netcdf()}} function}
 
 \item{scene}{Character defining the scene. Can be one of "clouds", "water",
 "snow" or "shadows"}

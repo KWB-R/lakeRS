@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_class_assessment.R
 \name{plot_class_assessment}
 \alias{plot_class_assessment}
-\title{Plot the numeric EO eutriphication assessment for one lake}
+\title{Plot class assessment results of lakes}
 \usage{
 plot_class_assessment(
   class_assessment,
@@ -13,7 +13,7 @@ plot_class_assessment(
 }
 \arguments{
 \item{class_assessment}{The numeric assessment list created by
-\link{EO_assessment_numeric}}
+\code{\link[=discreteClassAssessment]{discreteClassAssessment()}}}
 
 \item{lakeNames, lakeIDs, rowNumbers}{One or more of those can be defined as
 character vector for lakeNames and lakeIDs or numeric vectors for rowNUmbers.

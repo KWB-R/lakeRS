@@ -74,7 +74,9 @@ start_openEO_job <- function(
   if(length(props) == 0L){
     props <- NULL
   }
- 
+  
+  
+  
   if(is.numeric(geom)){
     se <- list(
       "crs" = crs, 
@@ -82,29 +84,51 @@ start_openEO_job <- function(
       "east" = geom[2], 
       "south" = geom[3],
       "west" = geom[4])
-  } else if (is.list(geom)){
-    geom <- lapply(geom, function(x){x[2:1]})
-    geom[[length(geom) + 1]] <- geom[[1]]
-    se <- list(
+    # geom2 <- list(c(geom["north"], geom["east"]),
+    #               c(geom["south"], geom["east"]),
+    #               c(geom["south"], geom["west"]),
+    #               c(geom["north"], geom["west"]),
+    #               c(geom["north"], geom["east"]))
+    # se_poly <- list(
+    #   "type" = "Polygon",
+    #   "crs" = crs,
+    #   "coordinates" = list(geom2)
+    # )
+    
+  } else if(is.list(geom)){
+    geom2 <- lapply(geom, function(x){x[2:1]})
+    geom2[[length(geom2) + 1]] <- geom2[[1]]
+    se <- se_poly <- list(
       "type" = "Polygon",
       "crs" = crs,
-      "coordinates" = list(geom)
+      "coordinates" = list(geom2)
     )
   }
-
+  
   dataDefinition <- p$load_collection(
     "id" = collection,
     "spatial_extent" = se,
     "temporal_extent" = list(tBeg, tEnd),
     "bands" = bands, 
-    "properties" =as.list(props)
+    "properties" = as.list(props)
   )
   
-  #f = openeo::list_file_formats()
+  if(is.list(geom)){
+    dataDefinition <- p$mask_polygon(
+      data = dataDefinition, 
+      mask = se_poly
+    )
+  }
+  
   result_netcdf = p$save_result(
     data = dataDefinition, 
-    format = outputFormat
+    format = outputFormat, #f = openeo::list_file_formats()
+    options = list(
+      "compression" = "True",
+      "complevel" = 9 # from 1 (fast and low compression) to 9 (other way round)
+    )
   )
+  
   if(uniqueTitle){
     previousJobs <- as.data.frame(openeo::list_jobs())
     pt <- previousJobs$title
@@ -126,9 +150,10 @@ start_openEO_job <- function(
     }
   }
   
-  job = openeo::create_job(
+  job <- openeo::create_job(
     graph = result_netcdf,
-    title = title)
+    title = title
+  )
   
   openeo::start_job(job = job)
   
