@@ -15,8 +15,12 @@
 #' @param threshold The mininum number of valid values for one pixel to be 
 #' processed (the higher the days around moving averages are, the lower this
 #' threshold can be)
-#' @param maxPixels Maximum number of pixels (randomly chosen from available pixels).
-#' If Inf, all pixels will be analysed.
+#' @param maxPixels If the number is below 1 it will be interpreted as a 
+#' proportion of all valid Pixels. Otherwise, maxPixels defines the number of 
+#' pixels used to calculate the overall dynamic.If it is smaller as the number of 
+#' valid pixels (revided by the threshold value), pixels will drawn in decreasing 
+#' order from most valid to lowest valid. If Inf, all pixels will be analysed. 
+#' MaxPixels is ignored if pixelFilter is defined.
 #' @param pixelFilter The ID of pixels to be used (The ID of a pixel is its 
 #' its number in the the original matrix of the netcdf).
 #' @param maxDataPoints The number of datapoints to be part of one matrix
@@ -30,8 +34,6 @@
 #' A moving average is calculated for a day if at least two different images 
 #' are available. If the number of images is not sufficient the days_around_ma
 #' need to be increased and the results will become smoother.
-#' 
-#' 
 #' 
 #' @export
 #' 
@@ -55,18 +57,19 @@ dynamic_per_pixel <- function(
   
   cat("Image data is filtered for SCL categories pixel by pixel ... \n")
   for(i in seq_along(indexList)){
-    indexList[[i]] <- if(water_scenes_only){
-      scl_filter(
-        indexImage = indexList[[i]], 
-        sclImage = sclList[[i]], 
-        bands = 6, 
-        invert = TRUE)
-    } else {
-      scl_filter(
-        indexImage = indexList[[i]], 
-        sclImage = sclList[[i]], 
-        bands = c(8:11))    
-    }
+    indexList[[i]] <- 
+      if(water_scenes_only){
+        scl_filter(
+          indexImage = indexList[[i]], 
+          sclImage = sclList[[i]], 
+          bands = 6, 
+          invert = TRUE)
+      } else {
+        scl_filter(
+          indexImage = indexList[[i]], 
+          sclImage = sclList[[i]], 
+          bands = c(8:11))    
+      }
   }
   
   imageDOY <- as.numeric(format(imageIndex$t_date, "%j"))
@@ -78,7 +81,6 @@ dynamic_per_pixel <- function(
   if(!is.null(pixelFilter)){
     pixel_selection_i <- pixelFilter
     nAvailable <- np <- length(pixelFilter)
-    maxPixels <- Inf
     filteredIndexList <- lapply(indexList, function(x){x[pixelFilter]})
     ts_select <- matrix(
       data = unlist(filteredIndexList), 
@@ -86,11 +88,9 @@ dynamic_per_pixel <- function(
       ncol = length(filteredIndexList)
     )
   } else {
-    ts <- matrix(
-      data = unlist(indexList), 
-      nrow = d[1] * d[2], 
-      ncol = length(indexList)
-    )
+    ts <- sapply(indexList, function(x){
+      unlist(x)
+    })
     valid_values <- apply(ts, 1 , function(p_ts){sum(!is.na(p_ts))})
     med_values <- median(valid_values[valid_values > 0])
     if(is.null(threshold)){
@@ -99,7 +99,17 @@ dynamic_per_pixel <- function(
     if(is.null(days_around_ma)){
       days_around_ma <- ceiling(365 / med_values * 3)
     }
-    pixel_selection <- valid_values > threshold
+    pixel_selection <- valid_values >= threshold
+    if(maxPixels <= 1){
+      maxPixels <- round(sum(pixel_selection) * maxPixels)
+    }
+    pixel_selection_i <- 
+      if(maxPixels < sum(pixel_selection)){
+        order(valid_values, decreasing = TRUE)[1:maxPixels]
+      } else {
+        which(pixel_selection)
+      }
+   
     if(sum(pixel_selection) == 0){
       return(
         list("moving_averages" = NULL,
@@ -110,12 +120,6 @@ dynamic_per_pixel <- function(
                "valid_values" = 0)
         )
       )
-    }
-    pixel_selection_i <- which(pixel_selection)
-    nAvailable <- length(pixel_selection_i)
-    if(nAvailable > maxPixels){
-      pixel_selection_i <- sample(pixel_selection_i, maxPixels)
-      nAvailable <- length(pixel_selection_i)
     }
     ts_select <- ts[pixel_selection_i,]
     rm(ts)
@@ -146,7 +150,7 @@ dynamic_per_pixel <- function(
   }
   
   cat(paste0(
-    "Calculate moving averages of ", nAvailable, " pixel timesseries ... \n")
+    "Calculate moving averages of ", length(pixel_selection_i), " pixel timesseries ... \n")
   )
   ipa <- images_per_ma(
     t_doy = t_doy,

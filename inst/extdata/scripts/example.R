@@ -59,6 +59,26 @@ lakeRS::download_openEO_job(
 filePath <- "C:/Users/mzamzo/Documents/tmp/pcl/01_data/input/ndtri_openeo/Koerbaer Teich_lakeRS-example_2020-01-01_2021-01-01"
 filePath <- "C:/Users/mzamzo/Documents/tmp/pcl/01_data/input/ndtri_openeo/TrichonisLake_DS1_20190101-20200101"
 
+# further input
+lakeName <- 
+  "Lake Trichonis" 
+  # "Körbaer Teich"
+lakeID <- 
+  "DS1" 
+  # "800015388119" 
+indexName <- 
+  "NDTrI"
+  #"NDCI"
+  # "NDTI"
+  # "NDSSI"
+
+indexBands <- 
+  # c("B05", "B02")
+  # c("B05", "B03")
+  # c("B04", "B03")
+  # c("B02", "B08")
+
+#
 # open netcdf connection
 nc <- lakeRS::open_netcdf(filePath = filePath)
 
@@ -66,8 +86,8 @@ nc <- lakeRS::open_netcdf(filePath = filePath)
 range(nc$t_date)
 imageIndex <- lakeRS::ndi_per_image(
   nc = nc, 
-  year = 2020, 
-  bandNames = c("B05", "B02")
+  year = 2019, 
+  bandNames = indexBands
 )
 
 # yearly dynamic
@@ -83,18 +103,26 @@ imageIndex <- lakeRS::ndi_per_image(
     v_averageList = list(indexDynamic$lakeDynamic$q_0.5), 
     df_q50List = list(indexDynamic$lakeDynamic[,c("q_0.25", "q_0.75")]), 
     df_q95List = list(indexDynamic$lakeDynamic[,c("q_0.025", "q_0.975")]),
-    lakeName = "Körbaer Teich", 
-    ylab = "NDTrI per timestep")
+    lakeName = lakeName, 
+    ylab = paste0(indexName, " per timestep"))
+  
+  lakeRS::plot_dynamic(
+    v_averageList = list(indexDynamic$lakeDynamic$q_0.5), 
+    df_q50List = list(indexDynamic$lakeDynamic[,c("q_0.25", "q_0.75")]), 
+    df_q95List = NULL,
+    lakeName = lakeName, 
+    ylab = paste0(indexName, " per timestep"))
   
   
   lakeRS::best_nk(pixelDynamic = indexDynamic$pixelDynamics)
+  k <- 4
   
   pClusters <- lakeRS::pixel_clusters(
     pixelDynamic = indexDynamic$pixelDynamics, 
     nc = nc, correlate_first = TRUE,
-    k = 3)
+    k = k)
   
-  DynamicStatList <- lapply(1:3, function(CLUSTER){
+  DynamicStatList <- lapply(1:k, function(CLUSTER){
     lakeRS::dynamic_per_pixel(
       imageIndex = imageIndex, 
       nc = nc, 
@@ -109,13 +137,11 @@ imageIndex <- lakeRS::ndi_per_image(
   lakeRS::plot_dynamic(
     v_averageList = lapply(DynamicStatList, function(x){x$q_0.5}), 
     df_q50List = lapply(DynamicStatList, function(x){data.frame(x$q_0.25, x$q_0.75)}),
-    lakeName = "Körbaer Teich", 
-    TSnames = c("C1", "C2", "C3")
+    lakeName = lakeName, 
+    TSnames = paste0("C", 1:k)
   )
     
-    DynamicStatList = DynamicStatList, 
-    lakeName = "Körbaer Teich", 
-    smallBandOnly = TRUE)
+ 
 }
 
 # Temporal aggregation
@@ -140,7 +166,7 @@ if(FALSE){
 # spatial aggregation
 lakeIndex <- lakeRS::seasonal_index_per_lake(
   seasonIndex = seasonIndex, 
-  lakeName = "Koerbaer_teich",
+  lakeName = lakeName,
   lakeID = "800015388119"
 ) 
 
@@ -151,8 +177,8 @@ yearlyLakes <- lakeRS::combine_years_lakeData(lakeIndexList = list(lakeIndex))
 if(FALSE){
   lakeRS::plot_lake_index_histogram(
     lakeIndex = lakeIndex, 
-    lakeName = "Koerbaer_teich", 
-    indexName = "NDTrI"
+    lakeName = lakeName, 
+    indexName = indexName
   )
   
   # some plot as above
@@ -188,10 +214,22 @@ classData <- lakeRS::discreteClassAssessment(
     classColors = lakeRS::tenClassColors$color,
     plotLegend = FALSE) 
 }
-classData <- lakeRS::numericAssessment(
+
+numData <- lakeRS::numericAssessment(
   yearly_spread = yearlyPixels$indexTable
 )
 
+
+
+
+
+
+
+
+
+
+# -------------------------------------------------------
+# old
 
 xScene <- lakeRS::nc_scene_per_image(
   nc = nc, 

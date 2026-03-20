@@ -15,6 +15,7 @@
 load_BandLayer <- function(
     nc, band, monthFilter = NULL, yearFilter = NULL
 ){
+  cat(paste("Loading values of Band", band, "... \n"))
   if(!is.null(monthFilter)){
     mf <- as.integer(format(nc$t_date, "%m")) %in% as.integer(monthFilter)
     if(sum(mf) > 0){
