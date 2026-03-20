@@ -39,7 +39,6 @@ ndi_per_image <- function(
   #   nc$SpRast[[IN]] <- 
   #     (nc$SpRast[[AN]] - nc$SpRast[[BN]]) / (nc$SpRast[[AN]] + nc$SpRast[[BN]])
   # }
-  cat(paste("Loading values of Band", bandNames[1], "... \n"))
   At <- load_BandLayer(
     nc = nc, 
     band = bandNames[1], 
@@ -47,7 +46,6 @@ ndi_per_image <- function(
     yearFilter = year
   )
   
-  cat(paste("Loading values of Band", bandNames[2], "... \n"))
   Bt <- load_BandLayer(
     nc = nc, 
     band = bandNames[2],

@@ -30,8 +30,11 @@ except for cloud and snow scenes.}
 NULL the number of days around the moving average is derived from the
 median available values per pixel.}
 
-\item{maxPixels}{Maximum number of pixels (randomly chosen from available pixels).
-If Inf, all pixels will be analysed.}
+\item{maxPixels}{If the number is below 1 it will be interpreted as a
+proportion of all valid Pixels. Otherwise, maxPixels defines the number of
+pixels used to calculate the overall dynamic.If it is smaller as the number of
+valid pixels (revided by the threshold value), pixels will drawn in decreasing
+order from most valid to lowest valid. If Inf, all pixels will be analysed.}
 
 \item{pixelFilter}{The ID of pixels to be used (The ID of a pixel is its
 its number in the the original matrix of the netcdf).}

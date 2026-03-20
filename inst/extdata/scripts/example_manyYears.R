@@ -5,7 +5,6 @@ system.time(
   nc <- lakeRS::open_netcdf(filePath = filePath)
 )
 
-
 # Dynmaic
 DynamicList <- list()
 years <- 2018:2025
