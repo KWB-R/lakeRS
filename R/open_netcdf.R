@@ -8,7 +8,7 @@
 #' Returns a list of spatial and temporal variables, the netcdf CRS (coordinate 
 #' reference system) and the spatRaster of all layers
 #' 
-#' @importFrom terra describe rast xFromCol yFromCol crs
+#' @importFrom terra describe rast xFromCol yFromRow crs
 #' 
 #' @export
 open_netcdf <- function(
