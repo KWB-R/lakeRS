@@ -14,6 +14,8 @@ plot_scene_coverage <- function(
     vDate, vCoverage = NULL, upperLimits = c(0.05, 0.1, 0.3, 0.5, 0.75, 1)
 ){
  
+  old_par <- par(no.readonly = TRUE)
+  on.exit(par(old_par), add = TRUE)
   
   df <- data.frame("date" = vDate)
   if(!is.null(vCoverage)){
