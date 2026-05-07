@@ -34,7 +34,8 @@ median available values per pixel.}
 proportion of all valid Pixels. Otherwise, maxPixels defines the number of
 pixels used to calculate the overall dynamic.If it is smaller as the number of
 valid pixels (revided by the threshold value), pixels will drawn in decreasing
-order from most valid to lowest valid. If Inf, all pixels will be analysed.}
+order from most valid to lowest valid. If Inf, all pixels will be analysed.
+MaxPixels is ignored if pixelFilter is defined.}
 
 \item{pixelFilter}{The ID of pixels to be used (The ID of a pixel is its
 its number in the the original matrix of the netcdf).}
