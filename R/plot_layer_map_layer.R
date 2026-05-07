@@ -55,7 +55,7 @@ map_layer <- function(
       COLOR <- ncLayer
       ncLayer <- matrix(data = 1:length(ncLayer), nrow = nrow(ncLayer), ncol = ncol(ncLayer))
     }
-  }
+  } 
   
   r_wgs84 <- sameDimProjection(
     initial_raster = terra::rast(
@@ -207,6 +207,9 @@ plot_layer <- function(
     legendTitle = NULL,
     plotLegend = TRUE
 ){
+  old_par <- par(no.readonly = TRUE)
+  on.exit(par(old_par), add = TRUE)
+  
   if(all(is.na(ncLayer))){
     stop("No available data for this layer -> All values are NA")
   }
