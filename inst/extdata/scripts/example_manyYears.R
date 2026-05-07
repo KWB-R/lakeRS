@@ -1,4 +1,4 @@
-filePath <- "C:/Users/mzamzo/Documents/tmp/pcl/01_data/input/ndtri_openeo/Brates Lake_DS2_20180101-20251201"
+filePath <- "C:/Users/mzamzo/Documents/tmp/pcl/01_data/input/ndtri_openeo/Koerbaer Teich_Example_20180101-20241231"
 
 # open netcdf connection
 system.time(
@@ -7,7 +7,7 @@ system.time(
 
 # Dynmaic
 DynamicList <- list()
-years <- 2018:2025
+years <- 2018:2024
 for(year in years){
   cat(paste0("Processing year ", year, " ...\n"))
   imageIndex <- lakeRS::ndi_per_image(
@@ -22,39 +22,50 @@ for(year in years){
     returnSinglePixels = FALSE, 
     days_around_ma = 30)
   
-  # plot alle years
-  x <- lapply(DynamicList, function(x){x$lakeDynamic$q_0.5})
-  lakeRS::plot_dynamic(
-    v_averageList = x, 
-    TSnames = names(x)
-  )
-  
-  d <- lakeRS::combine_years_dynamic(
-    indexDynamicList = DynamicList, 
-    years = 2018:2024
-  )
-  
-  lakeRS::plot_dynamic(
-    v_averageList = list(d$mean_of_median), 
-    v_sdList = list(d$sd_over_median), 
-    TSnames = "Years 2018 - 2024",
-    df_reference = data.frame(
-      "doy" = 1:365, 
-      "value" = DynamicList$y_2025$lakeDynamic$q_0.5), 
-    RefName = "2025", 
-    lakeName = "Lake Brates"
-  )
-  
-  
-  
-  
 }
+
+# plot alle years
+x <- lapply(DynamicList, function(x){x$lakeDynamic$q_0.5})
+
+lakeRS::plot_dynamic(
+  v_averageList = x, 
+  TSnames = years
+)
+# without reference year
+d <- lakeRS::combine_years_dynamic(
+  indexDynamicList = DynamicList, 
+  years = 2018:2024
+)
+lakeRS::plot_dynamic(
+  v_averageList = list(d$mean_of_median), 
+  v_sdList = list(d$sd_over_median), 
+  TSnames = "Years 2018 - 2024",
+  lakeName = "Körbaer Teich"
+)
+
+
+# with references year
+# Exclude reference year from averaging
+d <- lakeRS::combine_years_dynamic(
+  indexDynamicList = DynamicList, 
+  years = 2018:2023
+)
+lakeRS::plot_dynamic(
+  v_averageList = list(d$mean_of_median), 
+  v_sdList = list(d$sd_over_median), 
+  TSnames = "Years 2018 - 2023",
+  df_reference = data.frame(
+    "doy" = 1:365, 
+    "value" = DynamicList$y_2024$lakeDynamic$q_0.5), 
+  RefName = "2024", 
+  lakeName = "Körbaer Teich"
+)
 
 # Index per image 
 range(nc$t_date)
 
 lakeIndexList <- list()
-years <- 2018:2025
+years <- 2018:2024
 for(year in years){
   cat(paste0("Processing year ", year, " ...\n"))
   imageIndex <- lakeRS::ndi_per_image(
@@ -82,22 +93,29 @@ yearlyLakes <- lakeRS::combine_years_lakeData(lakeIndexList = lakeIndexList)
 
 # yearly data set of pixelwise data
 yearlyPixels <- lakeRS::combine_years_pixelData(lakeIndexList = lakeIndexList)
+
 classData <- lakeRS::discreteClassAssessment(
   yearly_spread = yearlyPixels$indexTable
 )
 
 
-{
-  # some plot as above
-  lakeRS::map_layer(
-    ncLayer = matrix(
-      data = classData$assessment$year_2020_class, 
-      nrow = length(nc$y), ncol = length(nc$x)),
-    nc = nc, 
-    lowerLimits = lakeRS::tenClassColors$class,
-    classColors = lakeRS::tenClassColors$color,
-    plotLegend = FALSE) 
-}
+lakeRS::map_layer(
+  ncLayer = matrix(
+    data = classData$assessment$year_2020_class, 
+    nrow = length(nc$y), ncol = length(nc$x)),
+  nc = nc, 
+  lowerLimits = lakeRS::tenClassColors$class,
+  classColors = lakeRS::tenClassColors$color,
+  plotLegend = TRUE) 
+
+lakeRS::plot_layer(
+  ncLayer = matrix(
+    data = classData$assessment$year_2020_class, 
+    nrow = length(nc$y), ncol = length(nc$x)), 
+  nc = nc, 
+  lowerLimits = lakeRS::tenClassColors$class, 
+  classColors = lakeRS::tenClassColors$color)
+
 
 numericData <- lakeRS::numericAssessment(
   yearly_spread = yearlyPixels$indexTable, 
@@ -111,62 +129,15 @@ lakeRS::plot_numeric_assessment(
   numericData = numericData, 
   rowNumber = fromBadToGood[1]
 )
+
 lakeRS::show_pixels(
-  x = numericData$assessment$x[fromBadToGood[1]], 
-  y = numericData$assessment$y[fromBadToGood[1]], 
-  crs = nc$crs)
+  x = numericData$assessment$x[fromBadToGood[1:10]], 
+  y = numericData$assessment$y[fromBadToGood[1:10]], 
+  crs = nc$crs, labels = 1:10)
 
 numericData[rowNumber,]
-hist(numericData$trend_short)
+hist(numericData$assessment$trend_short)
 median(numericData$trend_short, na.rm = TRUE)
 
-xScene <- lakeRS::nc_scene_per_image(
-  nc = nc, 
-  scene = "water"
-)
 
-cMax <- max(xScene$coverage) 
-dev.new(noRStudioGD = TRUE, width = 13.4, height = 5.1)
-lakeRS::plot_scene_coverage(
-  vDate = xScene$date, 
-  vCoverage = xScene$coverage, 
-  upperLimits = round(
-    c(0.05 * cMax, 0.2 * cMax, 0.5 * cMax,  0.8 * cMax, 0.9 * cMax, cMax), 3)
-)
-
-# Scene analysis per pixel
-nc <- lakeRS::nc
-
-ncf <- lakeRS::nc_time_filter(
-  nc = nc, 
-  tBeg = "2020-04-01", 
-  tEnd = "2020-12-31"
-)
-
-scl_image <- lapply(
-  seq_along(ncf$t_date), 
-  lakeRS::load_bandLayer, 
-  nc = ncf, 
-  bandName = "SCL"
-)
-scl_image <- lapply(scl_image, function(x){
-  x[is.na(x)] <- 0
-  x
-})
-sceneProportion <- lakeRS::waterscene_proportion(
-  scl_image = scl_image
-)
-
-# --> Map Layer muss gemacht werden
-lakeRS::map_layer(
-  ncLayer = sceneProportion$water,
-  nc = ncf,
-  lowerLimits = c(0,0.1, 0.3, 0.5, 0.7, 0.8, 0.9),
-  classColors = c("white","gray80", "gray60", "chartreuse1","chartreuse4",
-                  "dodgerblue", "dodgerblue4"),
-  legendTitle = "Water Classification Quality"
-)
-
-years <- as.numeric(unique(format(x = nc$t_date, "%Y")))
-matrixDim <- c(length(nc$y), length(nc$x))
 

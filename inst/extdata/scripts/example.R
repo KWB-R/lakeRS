@@ -25,7 +25,6 @@ lakeRS::display_geometry(geom = geom)
 # parallel to the axis it masks the output file by that polygon and further
 # compression lead to much lower data size.
 
-
 tBeg <- "2020-01-01"
 tEnd <- "2021-01-01"
 
@@ -57,15 +56,15 @@ lakeRS::download_openEO_job(
 # Scene analysis per time
 
 filePath <- "C:/Users/mzamzo/Documents/tmp/pcl/01_data/input/ndtri_openeo/Koerbaer Teich_lakeRS-example_2020-01-01_2021-01-01"
-filePath <- "C:/Users/mzamzo/Documents/tmp/pcl/01_data/input/ndtri_openeo/TrichonisLake_DS1_20190101-20200101"
+filePath <- "C:/Users/mzamzo/Documents/tmp/pcl/01_data/input/ndtri_openeo/Brates Lake_DS2_20180101-20251201"
 
 # further input
 lakeName <- 
-  "Lake Trichonis" 
-  # "Körbaer Teich"
+  # "Lake Brates" 
+  "Körbaer Teich"
 lakeID <- 
-  "DS1" 
-  # "800015388119" 
+  # "DS2" 
+  "800015388119" 
 indexName <- 
   "NDTrI"
   #"NDCI"
@@ -73,7 +72,7 @@ indexName <-
   # "NDSSI"
 
 indexBands <- 
-  # c("B05", "B02")
+  c("B05", "B02")
   # c("B05", "B03")
   # c("B04", "B03")
   # c("B02", "B08")
@@ -82,11 +81,40 @@ indexBands <-
 # open netcdf connection
 nc <- lakeRS::open_netcdf(filePath = filePath)
 
+# General information on image and scene classification frequency
+xScene <- lakeRS::nc_scene_per_image(nc = nc, scene = "clouds")
+lakeRS::plot_scene_coverage(
+  vDate = xScene$date, 
+  vCoverage = xScene$coverage
+)
+
+lakeRS::sceneIDs
+
+sceneProportion <- lakeRS::waterscene_proportion(scl_image = lakeRS:::load_BandLayer(nc = nc, band = "SCL")$band)
+lakeRS::plot_layer(
+  ncLayer = sceneProportion$water,
+  nc = nc,
+  lowerLimits = c(0,0.1, 0.3, 0.5, 0.7, 0.8, 0.9),
+  classColors = c("white","gray80", "gray60", "chartreuse1","chartreuse4",
+                  "dodgerblue", "dodgerblue4"),
+  legendTitle = "Water Classification Quality"
+)
+
+lakeRS::plot_layer(
+  ncLayer = sceneProportion$allScenes[[5]],
+  nc = nc,
+  lowerLimits = c(0,0.02,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,1) ,
+  classColors = c("white","gray80","gray60", "aquamarine1", "aquamarine3",
+                  "chartreuse1", "chartreuse3", "darkgreen", "goldenrod1",
+                  "chocolate1", "orangered1"),
+  legendTitle = paste0("Proportion of '", lakeRS::sceneIDs$name[5],"'")
+)
+
 # Index per image 
 range(nc$t_date)
 imageIndex <- lakeRS::ndi_per_image(
   nc = nc, 
-  year = 2019, 
+  year = 2020, 
   bandNames = indexBands
 )
 
@@ -141,6 +169,7 @@ imageIndex <- lakeRS::ndi_per_image(
     TSnames = paste0("C", 1:k)
   )
     
+  pClusters$clusterVector
  
 }
 
@@ -160,7 +189,6 @@ if(FALSE){
     lowerLimits = lakeRS::NDTrIColors$ndtri,
     classColors = lakeRS::NDTrIColors$color, 
     plotLegend = FALSE)
-  
 }
 
 # spatial aggregation
@@ -171,10 +199,14 @@ lakeIndex <- lakeRS::seasonal_index_per_lake(
 ) 
 
 # yearly data set of lakewise data
-yearlyLakes <- lakeRS::combine_years_lakeData(lakeIndexList = list(lakeIndex))
+yearlyLakes <- lakeRS::combine_years_lakeData(
+  lakeIndexList = list(lakeIndex), 
+  aggregationType = "modus"
+)
 
 # Plots ------------------------------------------------------------------------
 if(FALSE){
+  
   lakeRS::plot_lake_index_histogram(
     lakeIndex = lakeIndex, 
     lakeName = lakeName, 
@@ -196,6 +228,8 @@ if(FALSE){
     classColors = lakeRS::NDTrIColors$color, 
     plotLegend = FALSE)
 }
+
+
 
 # yearly data set of pixelwise data
 yearlyPixels <- lakeRS::combine_years_pixelData(lakeIndexList = list(lakeIndex))
@@ -223,61 +257,4 @@ numData <- lakeRS::numericAssessment(
 
 
 
-
-
-
-
-
-# -------------------------------------------------------
-# old
-
-xScene <- lakeRS::nc_scene_per_image(
-  nc = nc, 
-  scene = "water"
-)
-
-cMax <- max(xScene$coverage) 
-dev.new(noRStudioGD = TRUE, width = 13.4, height = 5.1)
-lakeRS::plot_scene_coverage(
-  vDate = xScene$date, 
-  vCoverage = xScene$coverage, 
-  upperLimits = round(
-    c(0.05 * cMax, 0.2 * cMax, 0.5 * cMax,  0.8 * cMax, 0.9 * cMax, cMax), 3)
-)
-
-# Scene analysis per pixel
-nc <- lakeRS::nc
-
-ncf <- lakeRS::nc_time_filter(
-  nc = nc, 
-  tBeg = "2020-04-01", 
-  tEnd = "2020-12-31"
-)
-
-scl_image <- lapply(
-  seq_along(ncf$t_date), 
-  lakeRS::load_bandLayer, 
-  nc = ncf, 
-  bandName = "SCL"
-)
-scl_image <- lapply(scl_image, function(x){
-  x[is.na(x)] <- 0
-  x
-})
-sceneProportion <- lakeRS::waterscene_proportion(
-  scl_image = scl_image
-)
-
-# --> Map Layer muss gemacht werden
-lakeRS::map_layer(
-  ncLayer = sceneProportion$water,
-  nc = ncf,
-  lowerLimits = c(0,0.1, 0.3, 0.5, 0.7, 0.8, 0.9),
-  classColors = c("white","gray80", "gray60", "chartreuse1","chartreuse4",
-                  "dodgerblue", "dodgerblue4"),
-  legendTitle = "Water Classification Quality"
-)
-
-years <- as.numeric(unique(format(x = nc$t_date, "%Y")))
-matrixDim <- c(length(nc$y), length(nc$x))
 
