@@ -19,7 +19,8 @@
 #' @export
 #' 
 waterscene_proportion <- function(scl_image){
-  scenes <- lapply(0:11, function(s) {
+  
+  scenes <- lapply(lakeRS::sceneIDs$scl, function(s) {
     Reduce("+", lapply(scl_image, function(image_scene){
       image_scene == s
     })) / length(scl_image)
