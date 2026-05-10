@@ -2,12 +2,12 @@
 % Please edit documentation in R/sameDimProjection.R
 \name{sameDimProjection}
 \alias{sameDimProjection}
-\title{Project a raster to a new CRS while preserving its row and column dimensions}
+\title{Reproject a raster while preserving row and column counts}
 \usage{
 sameDimProjection(initial_raster, finalCRS = "EPSG:4326")
 }
 \arguments{
-\item{initial_raster}{A \code{SpatRaster} object to be projected.}
+\item{initial_raster}{A \code{terra::SpatRaster} object.}
 
 \item{finalCRS}{Character string specifying the target CRS, in \code{EPSG} or WKT format.
 Default is \code{"EPSG:4326"}.}
@@ -17,24 +17,15 @@ A \code{SpatRaster} object reprojected to the specified CRS, maintaining the sam
 number of rows and columns as the input raster.
 }
 \description{
-This function reprojects an input raster to a specified target coordinate reference system (CRS),
-preserving the original number of rows and columns. The spatial extent of the raster is transformed
-to the new CRS, and a new raster template is created to match these dimensions before projection.
+Reprojects a terra input raster to a specified target coordinate reference
+system (CRS), preserving the original number of rows and columns. The spatial
+extent of the raster is transformed to the new CRS, and a new raster template
+is created to match these dimensions before projection.
 }
 \details{
-The function first projects the spatial extent of the input raster to the target CRS,
-then constructs a raster template with matching dimensions. The projection uses nearest-neighbor
-resampling (\code{method = "near"}). This can be useful for categorical or discrete data where
-interpolation should be avoided.
-}
-\examples{
-\dontrun{
-library(terra)
-r <- rast(system.file("ex/elev.tif", package = "terra"))
-r_proj <- sameDimProjection(r, finalCRS = "EPSG:3857")
-plot(r_proj)
-}
-
+The input extent is projected to the target CRS and used to create a
+template raster. Projection uses nearest-neighbor resampling (\code{method = "near"}), which is appropriate for categorical layers and avoids creating
+interpolated class values.
 }
 \seealso{
 \code{\link[terra:project]{terra::project()}}, \code{\link[terra:rast]{terra::rast()}}, \code{\link[terra:ext]{terra::ext()}}

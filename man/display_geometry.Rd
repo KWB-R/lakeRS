@@ -2,20 +2,29 @@
 % Please edit documentation in R/display_bbox.R
 \name{display_geometry}
 \alias{display_geometry}
-\title{Display the Bounding Box}
+\title{Display a bounding box or polygon on a leaflet map}
 \usage{
 display_geometry(geom, zoom = 15)
 }
 \arguments{
-\item{geom}{The geometry to display. Either a bounding box or a polygon}
+\item{geom}{Either a named numeric bounding box vector in the order \code{north},
+\code{east}, \code{south}, \code{west}, or a list of latitude-longitude coordinate pairs
+representing a polygon.}
 
-\item{zoom}{The zoom level of the initial map}
+\item{zoom}{Numeric scalar. Initial leaflet zoom level. Default is \code{15}.}
+}
+\value{
+A \code{leaflet} map object with either a rectangle or polygon overlay.
 }
 \description{
-Display the Bounding Box
+Creates an interactive leaflet map for quickly checking the spatial extent
+that will be used for an openEO request.
 }
 \details{
-Bounding Box as a names vector or
-c("north" = lat1, "east"  = lon1, "south" = lat2, "west" = lon2) or a list of
-pairs list(c(lat1, lng2), c(lat2, lon2), c(lat3, lon3))
+Polygon coordinates are expected as latitude-longitude pairs, matching
+common copy/paste formats from map tools. They are internally switched to
+longitude-latitude order for leaflet.
+Bounding Box as a named vector or
+c("north" = lat1, "east" = lon1, "south" = lat2, "west" = lon2)
+or a list of pairs list(c(lat1, lng2), c(lat2, lon2), c(lat3, lon3))
 }

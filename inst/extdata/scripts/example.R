@@ -1,40 +1,46 @@
-# Example Koerbaer Teich in Germany, Brandenburg
-# Temporal and spatial data, lake meta data
-lakeName <- "Koerbaer Teich"
-lakeID <- "lakeRS-example"
+# Process data on Copernicus web editor and download
+# (account for copernicus dataspace required)
+if(!("openeo" %in% installed.packages())){
+  install.packages("openeo")
+}
+eodc <- connect(host = "https://openeo.dataspace.copernicus.eu/openeo/1.2")
+openeo::login()
+
+# lake meta data, temporal and spatial filter 
+lakeName <- "Brates Lake"
+lakeID <- "DS2"
+
+tBeg <- "2025-01-01"
+tEnd <- "2025-12-31"
 
 # 1. Bounding Box from point 
 geom <- lakeRS::bbox_from_point(
-  lat = 51.815136, 
-  lon = 13.402570 , 
-  meters = 500)
-lakeRS::display_geometry(geom = geom)
+  lat = 45.48344, 
+  lon = 28.06878, 
+  meters = 500
+)
 
 # 2. Bounding Box from Rectangle
 geom <- lakeRS::bbox_from_rectangle(
-  top_lat = 51.817410, 
-  bottom_lat = 51.812633, 
-  left_lon = 13.395993, 
-  right_lon = 13.408728, 
-  meters = 0)
-lakeRS::display_geometry(geom = geom)
+  top_lat = 45.461176, 
+  bottom_lat = 45.505707, 
+  left_lon = 28.037879, 
+  right_lon = 28.099677, 
+  meters = 100
+)
 
 # 3. Bounding Box Polygon (TBA)
-# Especially for lakes that do not have a shore parallel to lon/lat axis this
-# can safe datasize efficiently. Although openEO processes a rectangle 
-# parallel to the axis it masks the output file by that polygon and further
-# compression lead to much lower data size.
+geom <- list(
+  c(45.505754, 28.037929), c(45.504479, 28.102674),c(45.462632, 28.101410), 
+  c(45.460962, 28.086337),c(45.461727, 28.065711), c(45.467570, 28.045977)
+)
 
-tBeg <- "2020-01-01"
-tEnd <- "2021-01-01"
+lakeRS::display_geometry(
+  geom = geom, 
+  zoom = 13
+)
 
-# Process data on Copernicus web editor and download
-# (account for copernicus dataspace required)
-library(openeo)
-eodc <- connect(host = "https://openeo.dataspace.copernicus.eu/openeo/1.2")
-login()
-
-jobTitle <- start_openEO_job(
+jobTitle <- lakeRS::start_openEO_job(
   title = paste(lakeName, lakeID, tBeg, tEnd, sep = "_"), 
   geom = geom, 
   bands = list(
@@ -82,7 +88,7 @@ indexBands <-
 nc <- lakeRS::open_netcdf(filePath = filePath)
 
 # General information on image and scene classification frequency
-xScene <- lakeRS::nc_scene_per_image(nc = nc, scene = "clouds")
+xScene <- lakeRS::nc_scene_per_image(nc = nc, scene = "water")
 lakeRS::plot_scene_coverage(
   vDate = xScene$date, 
   vCoverage = xScene$coverage
@@ -90,7 +96,10 @@ lakeRS::plot_scene_coverage(
 
 lakeRS::sceneIDs
 
-sceneProportion <- lakeRS::waterscene_proportion(scl_image = lakeRS:::load_BandLayer(nc = nc, band = "SCL")$band)
+sceneProportion <- lakeRS::waterscene_proportion(
+  scl_image = lakeRS:::load_BandLayer(nc = nc, band = "SCL")$band
+)
+
 lakeRS::plot_layer(
   ncLayer = sceneProportion$water,
   nc = nc,
@@ -100,14 +109,15 @@ lakeRS::plot_layer(
   legendTitle = "Water Classification Quality"
 )
 
-lakeRS::plot_layer(
-  ncLayer = sceneProportion$allScenes[[5]],
+scl <- 8
+lakeRS::map_layer(
+  ncLayer = sceneProportion$allScenes[[scl]],
   nc = nc,
-  lowerLimits = c(0,0.02,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,0.6,1) ,
+  lowerLimits = c(0,0.02,0.05,0.1,0.15,0.2,0.25,0.3,0.4,0.5,1) ,
   classColors = c("white","gray80","gray60", "aquamarine1", "aquamarine3",
                   "chartreuse1", "chartreuse3", "darkgreen", "goldenrod1",
                   "chocolate1", "orangered1"),
-  legendTitle = paste0("Proportion of '", lakeRS::sceneIDs$name[5],"'")
+  legendTitle = paste0("Proportion of '", lakeRS::sceneIDs$name[scl],"'")
 )
 
 # Index per image 
@@ -141,14 +151,15 @@ imageIndex <- lakeRS::ndi_per_image(
     lakeName = lakeName, 
     ylab = paste0(indexName, " per timestep"))
   
-  
-  lakeRS::best_nk(pixelDynamic = indexDynamic$pixelDynamics)
-  k <- 4
+  lakeRS::best_nk(
+    pixelDynamic = indexDynamic$pixelDynamics
+  )
   
   pClusters <- lakeRS::pixel_clusters(
     pixelDynamic = indexDynamic$pixelDynamics, 
-    nc = nc, correlate_first = TRUE,
-    k = k)
+    correlate_first = TRUE,
+    k = k
+  )
   
   DynamicStatList <- lapply(1:k, function(CLUSTER){
     lakeRS::dynamic_per_pixel(

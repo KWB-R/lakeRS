@@ -1,45 +1,49 @@
-#' The moving average dynamic of an RS index
-#' 
-#' The dynamic can include many years, all sorted by the day of the year.
-#' The aggregation per pixel is a moving average.
-#' 
-#' @param imageIndex the data list created by [ndi_per_image()]
-#' @param nc The netcdf list returned by [open_netcdf()]
-#' @param water_scenes_only By default only pixels classified as water scene are 
-#' used for the yearly average per pixel. If False, all values are included
-#' except for cloud and snow scenes.
-#' @param days_around_ma The days around the moving average day (i.e. 10  means
-#' 10 days before and ten days after the actual day are used for averaging). If
-#' NULL the number of days around the moving average is derived from the 
-#' median available values per pixel.
-#' @param threshold The mininum number of valid values for one pixel to be 
-#' processed (the higher the days around moving averages are, the lower this
-#' threshold can be)
-#' @param maxPixels If the number is below 1 it will be interpreted as a 
-#' proportion of all valid Pixels. Otherwise, maxPixels defines the number of 
-#' pixels used to calculate the overall dynamic.If it is smaller as the number of 
-#' valid pixels (revided by the threshold value), pixels will drawn in decreasing 
-#' order from most valid to lowest valid. If Inf, all pixels will be analysed. 
-#' MaxPixels is ignored if pixelFilter is defined.
-#' @param pixelFilter The ID of pixels to be used (The ID of a pixel is its 
-#' its number in the the original matrix of the netcdf).
-#' @param maxDataPoints The number of datapoints to be part of one matrix
-#' for moving average calculation. The default (5E+06) corresponds to 5000 pixels
-#' in 1000 images. 
-#' @param returnSinglePixels If TRUE (default) moving average dynamic of each
-#' pixel (up to the number of maxPixels) is returned. If False only median and
-#' some quantiles are returned.
-#' 
-#' @details
-#' A moving average is calculated for a day if at least two different images 
-#' are available. If the number of images is not sufficient the days_around_ma
-#' need to be increased and the results will become smoother.
-#' 
+#' Calculate day-of-year moving-average dynamics per pixel
+#'
+#' Converts image-wise remote-sensing index matrices into pixel-wise time series
+#' and calculates smoothed 365-day dynamics. The output includes lake-level
+#' summary statistics and, optionally, the individual pixel dynamics.
+#'
+#' @param imageIndex A list created by [ndi_per_image()] containing `RSindex`,
+#'   `t_date`, `t`, `x`, `y`, and `crs`.
+#' @param nc A netCDF list returned by [open_netcdf()]. The SCL band is loaded
+#'   from this object for scene filtering.
+#' @param water_scenes_only Logical. If `TRUE`, only pixels with SCL class 6
+#'   (water) are retained before averaging. If `FALSE`, cloudy pixels (SCL 
+#'   8,9,10,11) are removed before averaging. 
+#' @param days_around_ma Integer or `NULL`. Half-window size, in days, around
+#'   each day of year. (i.e. 10  means 10 days before and ten days after the 
+#'   actual day are used for averaging). If `NULL`, it is derived from the median number of valid
+#'   observations per pixel.
+#' @param maxPixels Numeric. Maximum number of pixels for which individual
+#'   dynamics are calculated. Values `<= 1` are interpreted as a proportion of
+#'   valid pixels; `Inf` uses all valid pixels. Ignored when `pixelFilter` is set.
+#' @param pixelFilter Optional integer vector of pixel positions in the original
+#'   matrix order. If supplied, exactly these pixels are processed.
+#' @param pixelQualityThreshold Optional numeric scalar between 0 and 1. 
+#'   Minimum water-scene proportion required for a pixel. If "byMedian", the median 
+#'   number of valid observations among non-empty pixels is used to select 
+#'   pixels.
+#' @param maxDataPoints Numeric. Maximum number of matrix cells processed in one
+#'   block. Larger datasets are split to reduce memory pressure.
+#' @param returnSinglePixels Logical. If `TRUE`, returns `pixelDynamics` and the
+#'   selected pixel coordinates. If `FALSE`, only lake-level summaries are
+#'   returned.
+#'
+#' @return A list with `lakeDynamic`, `crs`, `year`, `days_around_ma`, and
+#'   `dataAvailabilityThreshold`. If `returnSinglePixels = TRUE`, the list also
+#'   contains `x`, `y`, and `pixelDynamics`.
+#'
+#' @details For each day of year, all images within `days_around_ma` days before
+#'   and after the target day are averaged. A moving average is only calculated
+#'   if more than one image falls into the window. Long periods without image
+#'   availability are set to `NA` to avoid excessive temporal extrapolation.
+#'
 #' @export
 #' 
 dynamic_per_pixel <- function(
     imageIndex, nc, water_scenes_only = TRUE, days_around_ma = 20, 
-    maxPixels = 1000, pixelFilter = NULL, threshold = NULL,
+    maxPixels = 1000, pixelFilter = NULL, pixelQualityThreshold = 0.8,
     maxDataPoints = 5000000, returnSinglePixels = TRUE
 ){
   year <- unique(as.numeric(format(imageIndex$t_date, "%Y")))
@@ -59,16 +63,16 @@ dynamic_per_pixel <- function(
   for(i in seq_along(indexList)){
     indexList[[i]] <- 
       if(water_scenes_only){
-        scl_filter(
+        scl_mask(
           indexImage = indexList[[i]], 
           sclImage = sclList[[i]], 
-          bands = 6, 
+          sclCategories = 6, 
           invert = TRUE)
       } else {
-        scl_filter(
+        scl_mask(
           indexImage = indexList[[i]], 
           sclImage = sclList[[i]], 
-          bands = c(8:11))    
+          sclCategories = c(8:11))    
       }
   }
   
@@ -93,13 +97,19 @@ dynamic_per_pixel <- function(
     })
     valid_values <- apply(ts, 1 , function(p_ts){sum(!is.na(p_ts))})
     med_values <- median(valid_values[valid_values > 0])
-    if(is.null(threshold)){
-      threshold <- med_values
+    if(pixelQualityThreshold == "byMedian"){
+      nDataPointsThreshold <- med_values
+      pixel_selection <- valid_values >= nDataPointsThreshold
+      pixelQualityThreshold <- nDataPointsThreshold / length(ts)
+    } else {
+      waterLayer <- lakeRS::waterscene_proportion(scl_image = sclList)
+      pixel_selection <- waterLayer$water >= pixelQualityThreshold
+      pixel_selection[is.na(pixel_selection)] <- FALSE
     }
     if(is.null(days_around_ma)){
       days_around_ma <- ceiling(365 / med_values * 3)
     }
-    pixel_selection <- valid_values >= threshold
+    
     if(maxPixels <= 1){
       maxPixels <- round(sum(pixel_selection) * maxPixels)
     }
@@ -130,7 +140,7 @@ dynamic_per_pixel <- function(
   if(prod(dim(ts_select)) > maxDataPoints){
     nm <- nm + 1
     cat(paste0(paste0(
-      "Due to large matrix size, data is splitted into ", 
+      "Due to large matrix size, data is split into ", 
       nm, " small matrices ... \n")
     ))
     
@@ -227,7 +237,7 @@ dynamic_per_pixel <- function(
     "crs" = imageIndex$crs,
     "year" = year,
     "days_around_ma" = days_around_ma,
-    "dataAvailabilityThreshold" = threshold
+    "dataAvailabilityThreshold" = pixelQualityThreshold
   )
   if(returnSinglePixels){
     pixelDynamics <- as.list(as.data.frame(df_out))
@@ -238,12 +248,24 @@ dynamic_per_pixel <- function(
   output
 }
 
-#' Subset of all images to be used for moving averages for each day
-#' 
-#' @param t_doy Numeric vector of the day of the year according to ts_pixel 
-#' (same length and order)
-#' @param days_around_ma The days around the moving average day (i.e. 10  means
-#' 10 days before and ten days after the actual day are used for averaging)
+
+#' Identify images used for each moving-average day
+#'
+#' Builds a 365-element list of logical vectors indicating which image dates fall
+#' within the moving-average window around each day of year.
+#'
+#' @param t_doy Numeric vector of image days of year, in the same order as the
+#'   image time series.
+#' @param days_around_ma Integer. Half-window size in days.
+#'
+#' @return A list of length 365. Each element is a logical vector with the same
+#'   length as `t_doy`.
+#'
+#' @details Windows wrap around the end of the year. The implementation uses
+#'   strict inequalities, so images exactly on the lower or upper window boundary
+#'   are not included.
+#'
+#' @keywords internal
 #' 
 images_per_ma <- function(t_doy, days_around_ma){
   lapply(1:365, function(doy){

@@ -2,42 +2,40 @@
 % Please edit documentation in R/cluster_analysis.R
 \name{best_nk}
 \alias{best_nk}
-\title{Find the number of clusters to use in kmeans}
+\title{Estimate a suitable number of k-means clusters}
 \usage{
 best_nk(
   pixelDynamic,
   kMax = 10,
   minimum_clusterSize = 0.01,
-  plot_result = TRUE,
   correlate_first = FALSE
 )
 }
 \arguments{
-\item{pixelDynamic}{The pixel data table of the output of \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
+\item{pixelDynamic}{A list or data-frame-like object of pixel-level annual
+dynamics, usually \code{pixelDynamics} from \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}. Each pixel is
+expected to contain a 365-day moving-average series.}
 
-\item{kMax}{Tha maximum number of clusters to be tested}
+\item{kMax}{Integer. Maximum number of clusters to test. Default is \code{10}.}
 
-\item{minimum_clusterSize}{The minimum size of a cluster allowed. By default
-1\% of all moving average pixels, need to be in a cluster.}
+\item{minimum_clusterSize}{Numeric. Minimum allowed cluster size expressed as
+a proportion of all clustered pixels. Default is \code{0.01}.}
 
-\item{plot_result}{Logical}
-
-\item{correlate_first}{If TRUE, Pearson correlation between pixels will be
-used for clustering instead of Index values. This results in a clustering
-based on different shapes of the dynamic.}
+\item{correlate_first}{Logical. If \code{TRUE}, pixels are clustered by their
+correlation profiles rather than by raw index values.}
 }
 \value{
-This function plots the improvement values and returns the recommended
-number of cluster to use
+Integer giving the recommended number of clusters. The function also
+draws a diagnostic plot of explained variance by number of clusters.
 }
 \description{
-Based on the reduction of within cluster sum of squares
+Runs k-means clustering for increasing numbers of clusters and recommends the
+largest number that still satisfies a minimum cluster-size criterion. The
+decision is based on the proportion of variance explained by the clustering.
 }
 \details{
-The search for the best number of clusters is done by a maximum of 10 000
-pixels, which is assumed to be sufficient. If correlation is done first
-those 10 000 pixels are correlated with 1000 pixels of the same data.
-Furthermore, the number of observerations (365 days) is reduced to every
-third day only, to lower process time. This way, correlation should take
-less than 10 seconds.
+At most 10,000 pixels are sampled before testing cluster counts. If
+\code{correlate_first = TRUE}, the selected pixels are correlated with at most
+1,000 reference pixels. See \code{\link[=prepare_for_clustering]{prepare_for_clustering()}} for details on NA
+handling and optional correlation pre-processing.
 }

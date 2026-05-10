@@ -2,7 +2,7 @@
 % Please edit documentation in R/dynamic_per_pixel.R
 \name{dynamic_per_pixel}
 \alias{dynamic_per_pixel}
-\title{The moving average dynamic of an RS index}
+\title{Calculate day-of-year moving-average dynamics per pixel}
 \usage{
 dynamic_per_pixel(
   imageIndex,
@@ -11,53 +11,59 @@ dynamic_per_pixel(
   days_around_ma = 20,
   maxPixels = 1000,
   pixelFilter = NULL,
-  threshold = NULL,
+  pixelQualityThreshold = 0.8,
   maxDataPoints = 5e+06,
   returnSinglePixels = TRUE
 )
 }
 \arguments{
-\item{imageIndex}{the data list created by \code{\link[=ndi_per_image]{ndi_per_image()}}}
+\item{imageIndex}{A list created by \code{\link[=ndi_per_image]{ndi_per_image()}} containing \code{RSindex},
+\code{t_date}, \code{t}, \code{x}, \code{y}, and \code{crs}.}
 
-\item{nc}{The netcdf list returned by \code{\link[=open_netcdf]{open_netcdf()}}}
+\item{nc}{A netCDF list returned by \code{\link[=open_netcdf]{open_netcdf()}}. The SCL band is loaded
+from this object for scene filtering.}
 
-\item{water_scenes_only}{By default only pixels classified as water scene are
-used for the yearly average per pixel. If False, all values are included
-except for cloud and snow scenes.}
+\item{water_scenes_only}{Logical. If \code{TRUE}, only pixels with SCL class 6
+(water) are retained before averaging. If \code{FALSE}, cloudy pixels (SCL
+8,9,10,11) are removed before averaging.}
 
-\item{days_around_ma}{The days around the moving average day (i.e. 10  means
-10 days before and ten days after the actual day are used for averaging). If
-NULL the number of days around the moving average is derived from the
-median available values per pixel.}
+\item{days_around_ma}{Integer or \code{NULL}. Half-window size, in days, around
+each day of year. (i.e. 10  means 10 days before and ten days after the
+actual day are used for averaging). If \code{NULL}, it is derived from the median number of valid
+observations per pixel.}
 
-\item{maxPixels}{If the number is below 1 it will be interpreted as a
-proportion of all valid Pixels. Otherwise, maxPixels defines the number of
-pixels used to calculate the overall dynamic.If it is smaller as the number of
-valid pixels (revided by the threshold value), pixels will drawn in decreasing
-order from most valid to lowest valid. If Inf, all pixels will be analysed.
-MaxPixels is ignored if pixelFilter is defined.}
+\item{maxPixels}{Numeric. Maximum number of pixels for which individual
+dynamics are calculated. Values \verb{<= 1} are interpreted as a proportion of
+valid pixels; \code{Inf} uses all valid pixels. Ignored when \code{pixelFilter} is set.}
 
-\item{pixelFilter}{The ID of pixels to be used (The ID of a pixel is its
-its number in the the original matrix of the netcdf).}
+\item{pixelFilter}{Optional integer vector of pixel positions in the original
+matrix order. If supplied, exactly these pixels are processed.}
 
-\item{threshold}{The mininum number of valid values for one pixel to be
-processed (the higher the days around moving averages are, the lower this
-threshold can be)}
+\item{pixelQualityThreshold}{Optional numeric scalar between 0 and 1.
+Minimum water-scene proportion required for a pixel. If "byMedian", the median
+number of valid observations among non-empty pixels is used to select
+pixels.}
 
-\item{maxDataPoints}{The number of datapoints to be part of one matrix
-for moving average calculation. The default (5E+06) corresponds to 5000 pixels
-in 1000 images.}
+\item{maxDataPoints}{Numeric. Maximum number of matrix cells processed in one
+block. Larger datasets are split to reduce memory pressure.}
 
-\item{returnSinglePixels}{If TRUE (default) moving average dynamic of each
-pixel (up to the number of maxPixels) is returned. If False only median and
-some quantiles are returned.}
+\item{returnSinglePixels}{Logical. If \code{TRUE}, returns \code{pixelDynamics} and the
+selected pixel coordinates. If \code{FALSE}, only lake-level summaries are
+returned.}
+}
+\value{
+A list with \code{lakeDynamic}, \code{crs}, \code{year}, \code{days_around_ma}, and
+\code{dataAvailabilityThreshold}. If \code{returnSinglePixels = TRUE}, the list also
+contains \code{x}, \code{y}, and \code{pixelDynamics}.
 }
 \description{
-The dynamic can include many years, all sorted by the day of the year.
-The aggregation per pixel is a moving average.
+Converts image-wise remote-sensing index matrices into pixel-wise time series
+and calculates smoothed 365-day dynamics. The output includes lake-level
+summary statistics and, optionally, the individual pixel dynamics.
 }
 \details{
-A moving average is calculated for a day if at least two different images
-are available. If the number of images is not sufficient the days_around_ma
-need to be increased and the results will become smoother.
+For each day of year, all images within \code{days_around_ma} days before
+and after the target day are averaged. A moving average is only calculated
+if more than one image falls into the window. Long periods without image
+availability are set to \code{NA} to avoid excessive temporal extrapolation.
 }

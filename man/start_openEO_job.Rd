@@ -63,8 +63,9 @@ This function only returns the title of the job that is started on openEO.
 To download the job use function \link{download_openEO_job}
 }
 \description{
-This function will implement and start a job on openEO. You need to be
-connected and logged in to run this function.
+Builds an openEO process graph for a Sentinel-2 collection, spatial and
+temporal extent, optional property filters, and selected bands. The graph is
+saved as the requested output format and started as an openEO batch job.
 }
 \details{
 Laitude-Longitude Pairs are switched to longitude-latitude which is the

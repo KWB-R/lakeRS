@@ -1,9 +1,18 @@
-#' Calculates the proportion of a specified scene in an image
-#' 
-#' @param nc The output of [open_netcdf()] function
-#' @param scene Character defining the scene. Can be one of "clouds", "water",
-#' "snow" or "shadows"
-#' 
+#' Calculate scene-class coverage per image
+#'
+#' Calculates the proportion of pixels belonging to a selected Sentinel-2 SCL
+#' scene group for each image in a netCDF data cube.
+#'
+#' @param nc A list returned by [open_netcdf()].
+#' @param scene Character scalar. One of `"clouds"`, `"water"`, `"snow"`, or
+#'   `"shadows"`.
+#'
+#' @return A `data.frame` with columns `date` and `coverage`. `coverage` is the
+#'   proportion of pixels in the selected scene group for each image.
+#'
+#' @details Scene groups are mapped to SCL codes as follows: clouds = 8, 9, 10;
+#'   water = 6; snow = 11; shadows = 2, 3.
+#'
 #' @export
 #' 
 nc_scene_per_image <- function(nc, scene = "clouds"){

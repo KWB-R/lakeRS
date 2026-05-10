@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_layer_map_layer.R
 \name{map_layer}
 \alias{map_layer}
-\title{Leaflet Map one layer (Matrix) described by a netCDF}
+\title{Display a netCDF-aligned matrix as an interactive leaflet layer}
 \usage{
 map_layer(
   ncLayer,
@@ -16,38 +16,37 @@ map_layer(
 )
 }
 \arguments{
-\item{ncLayer}{This is a layer that corresponds to the x and y dimensions of
-the netCDF file. It can be a band of netCDF or further processed layer
-created by \code{\link[=waterscene_proportion]{waterscene_proportion()}}}
+\item{ncLayer}{Matrix with the same row and column dimensions as the netCDF
+grid. Values can be numeric classes, continuous numeric values, or hex color
+strings.}
 
-\item{nc}{The netCDF data list created by \code{\link[=open_netcdf]{open_netcdf()}}}
+\item{nc}{A list returned by \code{\link[=open_netcdf]{open_netcdf()}}. Used for coordinates and CRS.}
 
-\item{lowerLimits}{Lower limits of value classes. If NULL (default)
-numerical values will be used.}
+\item{lowerLimits}{Optional numeric vector of lower class limits. If supplied,
+categorical intervals are created with \code{\link[=cut]{cut()}}.}
 
-\item{highestValue}{If Null the highest value is derived by the maximum of
-all available layer values. It can also be specified manually.}
+\item{highestValue}{Optional numeric upper bound appended to \code{lowerLimits}.
+If \code{NULL}, the maximum layer value is used.}
 
-\item{classColors}{A vector of R-colors names corresponding to the value
-classes.}
+\item{classColors}{Character vector of colors corresponding to the classes
+defined by \code{lowerLimits}.}
 
-\item{valueRange}{Minimum and maximum values used for color scale of numeric
-values.}
+\item{valueRange}{Optional numeric vector of length two for continuous color
+scaling.}
 
-\item{legendTitle}{Character string for legend title}
+\item{legendTitle}{Optional character scalar used as legend title.}
 
-\item{plotLegend}{If TRUE legend will be plotted. If now lowerLimits and no
-valueRange are spefecied. No legend will be plotted.}
+\item{plotLegend}{Logical. If \code{TRUE}, a leaflet legend is added when enough
+information is available.}
+}
+\value{
+A \code{leaflet} map object.
 }
 \description{
-The plot is the layer on top of a leaflet map. The color scheme can
-be done for numeric or categorical values.
+Reprojects a matrix aligned with an \code{\link[=open_netcdf]{open_netcdf()}} object to WGS 84 and adds
+it as a raster overlay on an interactive leaflet map.
 }
 \details{
-Use case: Proportions of a scene.
-The above values and correspoding colors need to be specified. If for example
-values between 0 and 0.5 (50\%) should bewhite, values between 0.5 and 0.75
-should be yellow and values above 0.75 should be purple, lowerLimits are
-c(0, 0.5, 0.75) and the classColors arec("white", "yellow", "purple").
-In that case a legendTitle is recommended to explain what is displayed.
+The function supports a hex-color mode when all values of \code{ncLayer}
+are character strings beginning with \verb{#}.
 }

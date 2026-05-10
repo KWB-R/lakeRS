@@ -2,15 +2,24 @@
 % Please edit documentation in R/seasonal_index_per_pixel.R
 \name{pixel_wise_average}
 \alias{pixel_wise_average}
-\title{Index per pixel}
+\title{Average a list of matrices pixel by pixel}
 \usage{
 pixel_wise_average(list_of_mats, na.rm = FALSE)
 }
 \arguments{
-\item{list_of_mats}{A list of numeric matrices of the same size}
+\item{list_of_mats}{A list of numeric matrices with identical dimensions.}
 
-\item{na.rm}{Logical}
+\item{na.rm}{Logical. If \code{TRUE}, missing values are ignored by replacing them
+with zero and dividing by the number of non-missing values at each pixel.}
+}
+\value{
+A numeric matrix with the same dimensions as the input matrices.
 }
 \description{
-Index per pixel
+Calculates the element-wise average of equally sized matrices.
 }
+\details{
+If \code{na.rm = TRUE} and a pixel is missing in all matrices, division by
+zero can produce \code{NaN}.
+}
+\keyword{internal}

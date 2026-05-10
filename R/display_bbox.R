@@ -1,16 +1,24 @@
-#' Display the Bounding Box
-#' 
-#' @param geom The geometry to display. Either a bounding box or a polygon
-#' @param zoom The zoom level of the initial map
-#' 
-#' @details
-#' Bounding Box as a names vector or 
-#' c("north" = lat1, "east"  = lon1, "south" = lat2, "west" = lon2) or a list of
-#' pairs list(c(lat1, lng2), c(lat2, lon2), c(lat3, lon3))
-#' 
+#' Display a bounding box or polygon on a leaflet map
+#'
+#' Creates an interactive leaflet map for quickly checking the spatial extent
+#' that will be used for an openEO request.
+#'
+#' @param geom Either a named numeric bounding box vector in the order `north`,
+#'   `east`, `south`, `west`, or a list of latitude-longitude coordinate pairs
+#'   representing a polygon.
+#' @param zoom Numeric scalar. Initial leaflet zoom level. Default is `15`.
+#'
+#' @return A `leaflet` map object with either a rectangle or polygon overlay.
+#'
+#' @details Polygon coordinates are expected as latitude-longitude pairs, matching
+#'   common copy/paste formats from map tools. They are internally switched to
+#'   longitude-latitude order for leaflet.
+#'   Bounding Box as a named vector or 
+#'   c("north" = lat1, "east" = lon1, "south" = lat2, "west" = lon2) 
+#'   or a list of pairs list(c(lat1, lng2), c(lat2, lon2), c(lat3, lon3))
+#'
+#' @importFrom leaflet leaflet addTiles setView addRectangles addPolygons
 #' @export
-#' 
-#' @importFrom leaflet leaflet addTiles setView addRectangles
 #' 
 display_geometry <- function(geom, zoom = 15){
  

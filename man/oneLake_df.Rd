@@ -2,14 +2,20 @@
 % Please edit documentation in R/oneLake_df.R
 \name{oneLake_df}
 \alias{oneLake_df}
-\title{Reshapes NDTrI Lake list to dataframe}
+\title{Convert annual lake index results for one lake to a data frame}
 \usage{
 oneLake_df(lakeIndexList)
 }
 \arguments{
-\item{lakeIndexList}{A list of yearly lake index lists of one lake created by
-\code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}.}
+\item{lakeIndexList}{A list of yearly lake index lists, usually all belonging
+to the same lake.}
+}
+\value{
+A \code{data.frame} with lake name, lake ID, year, median index, standard
+deviation, selected modal index, number of valid pixels, and quality
+threshold.
 }
 \description{
-Reshapes NDTrI Lake list to dataframe
+Combines a list of annual \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}} outputs for one lake
+into a long-format summary table.
 }

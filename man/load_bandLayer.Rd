@@ -2,24 +2,32 @@
 % Please edit documentation in R/load_BandLayer.R
 \name{load_BandLayer}
 \alias{load_BandLayer}
-\title{Load values of one Band from netCDF into R environment}
+\title{Load one band from an opened netCDF data cube}
 \usage{
 load_BandLayer(nc, band, monthFilter = NULL, yearFilter = NULL)
 }
 \arguments{
-\item{nc}{The output of \code{\link[=open_netcdf]{open_netcdf()}} function or an extension of it}
+\item{nc}{A list returned by \code{\link[=open_netcdf]{open_netcdf()}} or a compatible object containing
+\code{SpRast}, \code{bands}, \code{x}, \code{y}, \code{t}, \code{t_date}, and \code{crs}.}
 
-\item{band}{Character of the sentinel-2 band name}
+\item{band}{Character scalar with the band name to load, for example \code{"B02"},
+\code{"B05"}, or \code{"SCL"}.}
 
-\item{monthFilter}{Numeric vector of months to load}
+\item{monthFilter}{Optional numeric vector of months to retain.}
 
-\item{yearFilter}{Numeric vector of years to load}
+\item{yearFilter}{Optional numeric vector of years to retain.}
+}
+\value{
+A list containing coordinates, time metadata, CRS, and \code{band}, a list
+of matrices with one matrix per retained time step.
 }
 \description{
-Load values of one Band from netCDF into R environment
+Extracts all time layers of a selected Sentinel-2 band from an \code{\link[=open_netcdf]{open_netcdf()}}
+object, optionally restricted to selected months and years.
 }
 \details{
-Sometime the reflactance bands show negative values. Those values need to be
-set to 0 before the index is calculated the same is done in the sentinel hub
-to harmonize the data: https://docs.sentinel-hub.com/api/latest/data/sentinel-2-l2a/
+Negative band values are set to zero before matrices are returned.
+This is intended for reflectance bands and follows the  Sentinel-2
+pre-processing convention to harmonize data
+(https://docs.sentinel-hub.com/api/latest/data/sentinel-2-l2a/)
 }

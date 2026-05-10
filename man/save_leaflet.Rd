@@ -2,16 +2,20 @@
 % Please edit documentation in R/save_leaflet.R
 \name{save_leaflet}
 \alias{save_leaflet}
-\title{Save a leaflet as html}
+\title{Save a leaflet map as a self-contained HTML file}
 \usage{
 save_leaflet(x, file)
 }
 \arguments{
-\item{x}{Leaflet object to be saved}
+\item{x}{A \code{leaflet}  object.}
 
-\item{file}{Filename including path}
+\item{file}{Character scalar. Output HTML file including path.}
+}
+\value{
+The return value of \code{\link[htmlwidgets:saveWidget]{htmlwidgets::saveWidget()}}. The main side effect
+is writing \code{file}.
 }
 \description{
-By adding content to the html it is assured that icons are scaled according
-to the device. In this way the map can be used by mobile devices.
+Adds a mobile-friendly viewport meta tag to a leaflet widget and saves it as a
+self-contained HTML file.
 }

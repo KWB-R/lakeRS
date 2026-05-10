@@ -2,37 +2,26 @@
 % Please edit documentation in R/combine_years.R
 \name{combine_years_lakeData}
 \alias{combine_years_lakeData}
-\title{Combine Lake Index Data Across Multiple Years}
+\title{Combine lake-level index values across years}
 \usage{
 combine_years_lakeData(lakeIndexList, aggregationType = "modus")
 }
 \arguments{
-\item{lakeIndexList}{A list of lists, each produced by \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}},
-containing yearly lake index data (including elements such as \code{IndexModusBest},
-\code{IndexMedian}, \code{year}, \code{Name}, and \code{ID}).}
+\item{lakeIndexList}{A list of lists produced by \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}.
+Each element must contain \code{year}, \code{Name}, \code{ID}, and the requested index
+statistic.}
 
-\item{aggregationType}{Character string specifying which index to extract.
-Accepted values are:
-\itemize{
-\item \code{"modus"} (default): uses \code{IndexModusBest}
-\item \code{"median"}: uses \code{IndexMedian}
-}}
+\item{aggregationType}{Character scalar. Use \code{"modus"} to extract
+\code{IndexModusBest} or \code{"median"} to extract \code{IndexMedian}.}
 }
 \value{
-A wide-format \code{data.frame} where each row represents a lake
-(identified by name and ID), and columns contain yearly index values.
-A warning is issued if non-unique combinations of lake name and ID are detected.
+A \code{data.frame} with lake identifiers (\code{name}, \code{id}) and one wide
+\verb{year_<year>} column per available year.
 }
 \description{
-This function merges a list of lake index objects—each created by
-\code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}—into a single data frame that summarizes
-index values per lake across multiple years. Users can specify whether
-to aggregate using the modus-based or median-based index.
+Converts a list of annual lake index objects into a wide table with one row
+per lake and one index column per year.
 }
-\examples{
-\dontrun{
-lake_list <- list(lake2020, lake2021, lake2022)
-combined_df <- combine_years_lakeData(lake_list, aggregationType = "median")
-}
-
+\details{
+The function warns if lake names or IDs are not unique in the output.
 }

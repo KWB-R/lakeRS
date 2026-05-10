@@ -2,34 +2,29 @@
 % Please edit documentation in R/numericAssessment.R
 \name{trends_to_classes}
 \alias{trends_to_classes}
-\title{Turn numerical trends into trend significance classes}
+\title{Convert numeric trend estimates to significance classes}
 \usage{
 trends_to_classes(assessmentTable, trendType = "long")
 }
 \arguments{
-\item{assessmentTable}{The output table created by \code{\link[=numericAssessment]{numericAssessment()}}}
+\item{assessmentTable}{A data frame, typically \code{numericAssessment(...)$assessment},
+containing trend and error columns for the selected \code{trendType}.}
 
-\item{trendType}{Character string. Either "long" long-term or "short" for
-short-term}
+\item{trendType}{Character scalar. Either \code{"long"} or \code{"short"}; selects
+\code{trend_long}/\code{error_long} or \code{trend_short}/\code{error_short}.}
 }
 \value{
-The assessmentTable expended by two columns for the trend significance and
-the trend strength
+The input data frame extended by \verb{trend_<trendType>_significance} and
+\verb{trend_<trendType>_strength}.
 }
 \description{
-Turn numerical trends into trend significance classes
+Adds categorical trend-significance and trend-strength columns to an
+assessment table containing trend estimates and standard errors.
 }
 \details{
-The trend significance is 0 if 0 is within
-the range of ("trend - error" , "trend + error") (-> no
-significant trend). If 0 is not within ("trend - error" , "trend + error")
-but within ("trend - 2 x error" , "trend + 2 x error") the class is either
--1 (low significant negative trend) or +1 (low significant positive trend).
-If 0 is not even part of the larger interval the class is either -2 (highly
-significant negative trend) or +2 (highly significant positive trend), where
-a positive trend describes the decrease of the trophic index.
-
-The trend strength is the absolute value of the trend significance class
-multiplied by the actual trend and -1. Thus a trend strength >> 0 is a
-sigifinicant high decrease of trophic state and vice versa
+Significance classes are \code{0} if zero lies within ±1 standard error,
+\verb{±1} if zero lies outside ±1 but inside ±2 standard errors, and \verb{±2} if zero
+lies outside ±2 standard errors. Positive trend estimates are converted to
+negative classes, so class sign follows the package's interpretation that a
+negative numerical trend indicates improvement of the trophic index.
 }

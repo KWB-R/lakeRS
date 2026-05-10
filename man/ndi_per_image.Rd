@@ -2,33 +2,32 @@
 % Please edit documentation in R/ndi_per_image.R
 \name{ndi_per_image}
 \alias{ndi_per_image}
-\title{Normalized Difference Index per Pixel and Image}
+\title{Calculate a normalized difference index for each image and pixel}
 \usage{
 ndi_per_image(nc, year, bandNames = c("B05", "B02"), monthFilter = NULL)
 }
 \arguments{
-\item{nc}{The netCDF data list created by \code{\link[=open_netcdf]{open_netcdf()}}}
+\item{nc}{A netCDF list created by \code{\link[=open_netcdf]{open_netcdf()}}.}
 
-\item{year}{Numeric value of year to be assessed.}
+\item{year}{Numeric scalar. Year to process. Only one year can be processed at
+a time.}
 
-\item{bandNames}{A character vector of length 2 defining the sentinel-2
-bands. To see what bands are available in the datacube run 'nc$bands'.
-The default is "B05" and "B02" which is used for NDTrI calculation.}
+\item{bandNames}{Character vector of length two. The index is calculated as
+\code{(bandNames[1] - bandNames[2]) / (bandNames[1] + bandNames[2])}. The default
+\code{c("B05", "B02")} corresponds to the NDTrI setup used by this package.}
 
-\item{monthFilter}{Optional numeric vector of months used for the index.
-If NULL all months are used.}
+\item{monthFilter}{Optional numeric vector of months to include. If \code{NULL},
+all months in \code{year} are used.}
+}
+\value{
+A list containing \code{x}, \code{y}, \code{t}, \code{t_date}, \code{crs}, and \code{RSindex}. The
+\code{RSindex} element is a list of matrices, one per image.
 }
 \description{
-Normalized Difference Index per Pixel and Image
+Loads two bands from a netCDF data cube and calculates an pixel-wise
+normalized difference index for each retained time step.
 }
 \details{
-The Index will be calculated by
-NDI = (bandNames_1 - bandNames_2) / (bandNames_1 + bandNames_2)
-
-Negative reflactance values are set to zero. See details of
-\code{\link[=load_BandLayer]{load_BandLayer()}}
-
-The SCL band on the other hand sometimes contains NA values which are
-problematic for further processing. NA values are substituted by 0 which
-is no ID for a scene
+Band values are loaded through \code{\link[=load_BandLayer]{load_BandLayer()}}, which sets
+negative values to zero before index calculation.
 }

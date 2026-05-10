@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_numeric_assessment.R
 \name{plot_numeric_assessment}
 \alias{plot_numeric_assessment}
-\title{Plot the numeric EO eutriphication assessment for one lake}
+\title{Plot numeric status and trend assessment for one lake}
 \usage{
 plot_numeric_assessment(
   numericData,
@@ -13,14 +13,27 @@ plot_numeric_assessment(
 )
 }
 \arguments{
-\item{numericData}{The numeric assessment list created by
-\code{\link[=numericAssessment]{numericAssessment()}}}
+\item{numericData}{A list created by \code{\link[=numericAssessment]{numericAssessment()}}.}
 
-\item{lakeName, lakeID, rowNumber}{One of those need to be defined to select
-the lake to be plotted}
+\item{lakeName}{Optional character scalar identifying the lake by name.}
 
-\item{ylab}{Y axis lable}
+\item{lakeID}{Optional character scalar identifying the lake by ID.}
+
+\item{rowNumber}{Optional numeric row number in \code{numericData$assessment}.}
+
+\item{ylab}{Character scalar. Y-axis label for the index panel.}
+}
+\value{
+No explicit return value. The function opens a graphics device and
+draws the assessment plot.
 }
 \description{
-Lake can be selected either by Name, ID or the rownumber in the assessment table
+Creates a multi-panel base R plot showing one selected lake's yearly index
+values, moving-average status, and long- and short-term trend estimates.
+}
+\details{
+Exactly one lake should be selected, either by row number, lake name,
+or lake ID. The first panel shows the distribution of all lakes as quantile
+bands and overlays the selected lake's annual values and status line. The
+two trend panels show point estimates with approximate 95\% intervals.
 }

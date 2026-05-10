@@ -37,23 +37,6 @@ The function performs the following steps:
 target resolution and CRS using bilinear interpolation.
 \item Merges all years’ pixel tables into a single data frame by coordinates.
 }
-
-The function is particularly useful for comparing or visualizing time series
-of spatially distributed indices at the pixel level, e.g., lake water quality indices.
-}
-\note{
-The resampling step uses bilinear interpolation. For categorical index data,
-consider adapting the method if value semantics require nearest-neighbor.
-}
-\examples{
-\dontrun{
-# Example assuming annual index outputs from `seasonal_index_per_lake()`
-index_2020 <- seasonal_index_per_lake(...)
-index_2021 <- seasonal_index_per_lake(...)
-combined <- combine_years_pixelWise(list(index_2020, index_2021))
-head(combined$yearsIndex)
-}
-
 }
 \seealso{
 \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}, \code{\link[terra:resample]{terra::resample()}}, \code{\link[terra:rast]{terra::rast()}}

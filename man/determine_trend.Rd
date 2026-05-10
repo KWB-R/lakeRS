@@ -2,30 +2,26 @@
 % Please edit documentation in R/numericAssessment.R
 \name{determine_trend}
 \alias{determine_trend}
-\title{Trend of an Index over years}
+\title{Calculate adjusted linear trends over recent years}
 \usage{
 determine_trend(yearly_spread = yearly_spread, tyears = 3, ttype = "short")
 }
 \arguments{
 \item{yearly_spread}{A data frame of lakes or pixels as row and the yearly
-index values as columns as created by \code{\link[=index_spread]{index_spread()}}}
+index values as columns}
 
 \item{tyears}{The number of years used for the trend analysis.}
 
-\item{ttype}{The type of trend (either "short" or "long") as character string}
+\item{ttype}{Character scalar, either \code{"short"} or \code{"long"}. Used to name the
+output columns.}
 }
 \value{
-A list of 4:
-"trends" is a matrix with one row per lake in the as in the
-yearlyspread input table and two columns for each trend, short-term and
-long-term. The trend is the slope of the regression line, and error is the
-standard error of the slope.
-"periods": number of years used for short-term and long-term trend
-"overallMedian": median value of the whole dataset
-"yearlyMedians": median values of all lakes per year
+A list with \code{trends}, \code{periodYear}, \code{overallMedian}, and
+\code{yearlyMedians}. \code{trends} contains the slope and the standard error of the
+slope for each row.
 }
 \description{
-Trend of an Index over years
+Calculate adjusted linear trends over recent years
 }
 \details{
 In order to rule out systematic errors based on weather conditions in a year,
@@ -38,4 +34,7 @@ Subsequantly, the trend is calculated as linear regression between previous
 years and adjusted NDTrI values.
 For a reliable trend assessment the number of lakes needs to be large enough
 (n>10).
+Only rows with complete data in all year columns are used to estimate
+the global and yearly medians for the bias correction. Individual row trends
+are returned as \code{NA} if any value in the selected trend window is missing.
 }

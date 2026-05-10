@@ -21,36 +21,14 @@ system of \code{x} and \code{y}, in a format understood by
 provided, its length should match the length of \code{x} and \code{y}.}
 }
 \value{
-An object of class \code{leaflet} representing the interactive map with
-the pixel locations. The map is also rendered in interactive contexts
-(e.g., RStudio Viewer, web browser).
+A \code{leaflet} map object.
 }
 \description{
-This function projects planar coordinates to WGS84 (EPSG:4326) and displays
-the corresponding pixel locations as circle markers on an interactive
-leaflet map centered on the mean coordinate of all points.
+Projects input coordinates to WGS 84 and displays them as circle markers on a
+leaflet map.
 }
 \details{
-The input coordinates are combined into a two-column matrix and reprojected
-from the given \code{crs} to WGS84 (EPSG:4326). An interactive leaflet map
-is then initialized, centered on the mean longitude and latitude of the
-projected points, and OpenStreetMap tiles are added as a basemap.
-Finally, the function adds circle markers at each projected coordinate,
-optionally with labels.
-
 The marker colors are currently hard-coded as \code{c("blue", "green",
-"orange", "purple")}. If the number of points exceeds the number of colors,
+  "orange", "purple")}. If the number of points exceeds the number of colors,
 colors will be recycled.
-}
-\examples{
-\dontrun{
-# Example coordinates in UTM zone 33N (EPSG:32633)
-x <- c(389425, 389500, 389575, 389650)
-y <- c(5741395, 5741450, 5741505, 5741560)
-crs <- "EPSG:32633"
-labels <- paste("Pixel", seq_along(x))
-
-show_pixels(x = x, y = y, crs = crs, labels = labels)
-}
-
 }

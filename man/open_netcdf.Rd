@@ -2,20 +2,27 @@
 % Please edit documentation in R/open_netcdf.R
 \name{open_netcdf}
 \alias{open_netcdf}
-\title{Open netCDF file}
+\title{Open an openEO netCDF data cube}
 \usage{
 open_netcdf(filePath, fileName = "openEO.nc")
 }
 \arguments{
-\item{filePath}{the path of the netCDF file}
+\item{filePath}{Character scalar. Directory containing the netCDF file.}
 
-\item{fileName}{The file name including .nc ending. By default openEO
-provides a file that is named "openEO.nc"}
+\item{fileName}{Character scalar. File name including the \code{.nc} extension.
+Default is \code{"openEO.nc"}.}
 }
 \value{
-Returns a list of spatial and temporal variables, the netcdf CRS (coordinate
-reference system) and the spatRaster of all layers
+A list with \code{bands}, \code{x}, \code{y}, \code{t}, \code{t_date}, \code{crs}, and \code{SpRast}.
+\code{x} and \code{y} are pixel-center coordinates, \code{t} contains numeric time steps,
+and \code{t_date} converts these time steps to dates using origin
+\code{1990-01-01}.
 }
 \description{
-Open netCDF file
+Reads a netCDF file into a \code{terra} SpatRaster and extracts spatial, temporal,
+band, and CRS metadata used by the lakeRS processing workflow.
+}
+\details{
+The function stops if subdatasets in the netCDF file have different
+row, column, or layer dimensions.
 }

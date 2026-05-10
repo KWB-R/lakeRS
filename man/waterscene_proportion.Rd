@@ -2,24 +2,23 @@
 % Please edit documentation in R/waterscene_proportion.R
 \name{waterscene_proportion}
 \alias{waterscene_proportion}
-\title{Proprtions of all scenes and dervied water scene proportion}
+\title{Calculate water-scene proportions from SCL images}
 \usage{
 waterscene_proportion(scl_image)
 }
 \arguments{
-\item{scl_image}{The SCL layer of the image-wise data, created by one of the
-index per image functions: \code{\link[=ndi_per_image]{ndi_per_image()}}}
+\item{scl_image}{A list of SCL matrices, typically loaded from the SCL band of
+an \code{\link[=open_netcdf]{open_netcdf()}} object for the same images used in an index calculation.}
 }
 \value{
-A list of 3:
-\itemize{
-\item the water scene proportion per pixel
-\item the disturbance scene proportion per pixel
-\item A list of all individual scene proportions per pixel
-}
+A list with \code{water}, \code{NoFalseDisturbance}, and \code{allScenes}. \code{water} is
+the derived water-scene proportion per pixel; \code{NoFalseDisturbance} is the
+proportion of pixels assigned to allowed disturbance classes; \code{allScenes} is
+a list of per-class proportions.
 }
 \description{
-Proprtions of all scenes and dervied water scene proportion
+Computes per-pixel proportions for all Sentinel-2 SCL classes and derives a
+water-scene proportion after accounting for disturbance classes.
 }
 \details{
 The water proportion is defined as all pixels that are "correctly" classified

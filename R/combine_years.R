@@ -29,31 +29,20 @@
 #'   \item Merges all years’ pixel tables into a single data frame by coordinates. 
 #' }
 #'
-#' The function is particularly useful for comparing or visualizing time series
-#' of spatially distributed indices at the pixel level, e.g., lake water quality indices.
-#'
-#' @note
-#' The resampling step uses bilinear interpolation. For categorical index data,
-#' consider adapting the method if value semantics require nearest-neighbor.
-#'
-#' @examples
-#' \dontrun{
-#' # Example assuming annual index outputs from `seasonal_index_per_lake()`
-#' index_2020 <- seasonal_index_per_lake(...)
-#' index_2021 <- seasonal_index_per_lake(...)
-#' combined <- combine_years_pixelWise(list(index_2020, index_2021))
-#' head(combined$yearsIndex)
-#' }
-#'
 #' @seealso [seasonal_index_per_lake()], [terra::resample()], [terra::rast()]
 #'
 #' @export
+#' 
 combine_years_pixelData <- function(lakeIndexList){
   if(!is.list(lakeIndexList[[1]])){
     stop("lakeIndexList needs to be a list of lists created by 'seasonal_index_per_lake()'")
   }
   
   years <- sapply(lakeIndexList, function(x){x$year})
+  if(any(duplicated(years))){
+    stop("At least one year appears more than once on the list.")
+  }
+  
   crs_of_years <- sapply(lakeIndexList, function(x){x$crs})
   if(length(unique(crs_of_years)) > 1L){
     warning("Different coordinate reference systems were used. ",
@@ -95,12 +84,14 @@ combine_years_pixelData <- function(lakeIndexList){
       )
       df_out <- df_out[order(df_out[,"x"]),]
       df_out <- data.frame(df_out[,c("y", "x")])
+      v <- terra::values(r_in_resampled)
     } else {
       df_out <- expand.grid("y" = x$y, "x" = x$x)
+      v <- c(x$IndexPixel)
     }
     df_out$i_row <- as.numeric(factor(df_out$y, levels = x$y))
     df_out$i_col <- as.numeric(factor(df_out$x, levels = x$x))
-    df_out[[paste0("year_", x$year)]] <-  c(x$IndexPixel)
+    df_out[[paste0("year_", x$year)]] <- v
     df_out
   })
   
@@ -119,35 +110,25 @@ combine_years_pixelData <- function(lakeIndexList){
        "crs" = mr$crs)
 }
 
-#' Combine Lake Index Data Across Multiple Years
+#' Combine lake-level index values across years
 #'
-#' This function merges a list of lake index objects—each created by 
-#' [seasonal_index_per_lake()]—into a single data frame that summarizes 
-#' index values per lake across multiple years. Users can specify whether 
-#' to aggregate using the modus-based or median-based index.
+#' Converts a list of annual lake index objects into a wide table with one row
+#' per lake and one index column per year.
 #'
-#' @param lakeIndexList A list of lists, each produced by [seasonal_index_per_lake()], 
-#'   containing yearly lake index data (including elements such as \code{IndexModusBest}, 
-#'   \code{IndexMedian}, \code{year}, \code{Name}, and \code{ID}).
-#' @param aggregationType Character string specifying which index to extract. 
-#'   Accepted values are:
-#'   \itemize{
-#'     \item \code{"modus"} (default): uses \code{IndexModusBest}
-#'     \item \code{"median"}: uses \code{IndexMedian}
-#'   }
+#' @param lakeIndexList A list of lists produced by [seasonal_index_per_lake()].
+#'   Each element must contain `year`, `Name`, `ID`, and the requested index
+#'   statistic.
+#' @param aggregationType Character scalar. Use `"modus"` to extract
+#'   `IndexModusBest` or `"median"` to extract `IndexMedian`.
 #'
-#' @return A wide-format \code{data.frame} where each row represents a lake 
-#'   (identified by name and ID), and columns contain yearly index values. 
-#'   A warning is issued if non-unique combinations of lake name and ID are detected.
+#' @return A `data.frame` with lake identifiers (`name`, `id`) and one wide
+#'   `year_<year>` column per available year.
 #'
-#' @examples
-#' \dontrun{
-#' lake_list <- list(lake2020, lake2021, lake2022)
-#' combined_df <- combine_years_lakeData(lake_list, aggregationType = "median")
-#' }
+#' @details The function warns if lake names or IDs are not unique in the output.
 #'
 #' @importFrom tidyr spread
 #' @export
+#' 
 combine_years_lakeData<- function(lakeIndexList, aggregationType = "modus"){
   if(!is.list(lakeIndexList[[1]])){
     stop("lakeIndexList needs to be a list of lists created by 'seasonal_index_per_lake()'")
@@ -177,12 +158,26 @@ combine_years_lakeData<- function(lakeIndexList, aggregationType = "modus"){
   df_out
 }
 
-#' Combine index dynamic of multiple years for a whole lake
-#' 
-#' @param indexDynamicList A list of index dynamic created by [dynamic_per_pixel()]
-#' @param years A numeric vector of all years to be considered. If NULL, all 
-#' available years will be used
-#' 
+#' Combine whole-lake dynamics across years
+#'
+#' Combines multiple annual outputs from [dynamic_per_pixel()] into summary
+#' curves across years. For each day of year, the function averages the annual
+#' median lake dynamics and calculates the standard deviation across those annual
+#' medians.
+#'
+#' @param indexDynamicList A named or unnamed list of annual dynamic objects
+#'   created by [dynamic_per_pixel()]. Each element must contain `lakeDynamic`
+#'   with column `q_0.5` and `days_around_ma`.
+#' @param years Optional numeric vector of years to include. If `NULL`, all list
+#'   elements are used. If the list is named, matching is performed on the names.
+#'
+#' @return A list with `mean_of_median` and `sd_over_median`, each a numeric
+#'   vector with one value per day of year.
+#'
+#' @details All selected dynamics must have been computed with the same
+#'   `days_around_ma`; otherwise the function stops because the smoothing windows
+#'   are not comparable.
+#'
 #' @export
 #' 
 combine_years_dynamic <- function(indexDynamicList, years = NULL){

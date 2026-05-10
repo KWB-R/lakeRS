@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_layer_map_layer.R
 \name{plot_layer}
 \alias{plot_layer}
-\title{Plot one layer (Matrix) described by a netCDF}
+\title{Plot a netCDF-aligned matrix as a static map}
 \usage{
 plot_layer(
   ncLayer,
@@ -16,38 +16,35 @@ plot_layer(
 )
 }
 \arguments{
-\item{ncLayer}{This is a matrix that corresponds to the x and y dimensions of
-the netCDF file. It can be a band of netCDF or further processed layer. It
-contant of the matrix can either be numerical or characters of hex colors.}
+\item{ncLayer}{Matrix with the same row and column dimensions as the netCDF
+grid. Values can be numeric or hex color strings.}
 
-\item{nc}{The netCDF data list created by \code{\link[=open_netcdf]{open_netcdf()}}}
+\item{nc}{A list returned by \code{\link[=open_netcdf]{open_netcdf()}}. Used for coordinates and CRS.}
 
-\item{lowerLimits}{Lower limits of value classes. If NULL (default) colors
-will be scaled according to numerical values.}
+\item{lowerLimits}{Optional numeric vector of class lower limits.}
 
-\item{classColors}{A vector of R-colors names corresponding to the value
-classes.}
+\item{classColors}{Character vector of colors for classes. In continuous mode
+without \code{valueRange}, defaults internally to \code{c("white", "black")}.}
 
-\item{highestValue}{If Null the highest value is derived by the maximum of
-all available layer values. It can also be specified manually.}
+\item{highestValue}{Optional upper bound for the last class.}
 
-\item{valueRange}{Minimum and maximum values used for color scale of numeric
-values.}
+\item{valueRange}{Optional numeric vector of length two for continuous value
+scaling.}
 
-\item{legendTitle}{Character string for legend title}
+\item{legendTitle}{Optional character scalar used as legend title.}
 
-\item{plotLegend}{If TRUE legend will be plotted. If no lowerLimits and no
-valueRange are specefied. No legend will be plotted.}
+\item{plotLegend}{Logical. If \code{TRUE}, a legend is plotted when class labels
+are available.}
+}
+\value{
+No explicit return value. The function draws a base R plot.
 }
 \description{
-The plot is the layer on top of a leaflet map. The color scheme can
-be done for numeric or categorical values.
+Reprojects a matrix aligned with a netCDF grid to WGS 84 and plots it with a
+distance scale and optional legend using base graphics.
 }
 \details{
-Use case: Proportions of a scene.
-The above values and correspoding colors need to be specified. If for example
-values between 0 and 0.5 (50\%) should bewhite, values between 0.5 and 0.75
-should be yellow and values above 0.75 should be purple, lowerLimits are
-c(0, 0.5, 0.75) and the classColors arec("white", "yellow", "purple").
-In that case a legendTitle is recommended to explain what is displayed.
+The plot is scaled according to geodesic width and height estimated
+with \code{\link[geosphere:distGeo]{geosphere::distGeo()}}. The helper \code{\link[=plot_scale]{plot_scale()}} adjusts the plot
+region to preserve the map's aspect ratio.
 }

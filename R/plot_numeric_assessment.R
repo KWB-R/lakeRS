@@ -1,16 +1,24 @@
-#' Plot the numeric EO eutriphication assessment for one lake
-#' 
-#' Lake can be selected either by Name, ID or the rownumber in the assessment table
-#' 
-#' @param numericData The numeric assessment list created by 
-#' [numericAssessment()]
-#' @param lakeName,lakeID,rowNumber One of those need to be defined to select
-#' the lake to be plotted
-#' @param ylab Y axis lable
-#' 
+#' Plot numeric status and trend assessment for one lake
+#'
+#' Creates a multi-panel base R plot showing one selected lake's yearly index
+#' values, moving-average status, and long- and short-term trend estimates.
+#'
+#' @param numericData A list created by [numericAssessment()].
+#' @param lakeName Optional character scalar identifying the lake by name.
+#' @param lakeID Optional character scalar identifying the lake by ID.
+#' @param rowNumber Optional numeric row number in `numericData$assessment`.
+#' @param ylab Character scalar. Y-axis label for the index panel.
+#'
+#' @return No explicit return value. The function opens a graphics device and
+#'   draws the assessment plot.
+#'
+#' @details Exactly one lake should be selected, either by row number, lake name,
+#'   or lake ID. The first panel shows the distribution of all lakes as quantile
+#'   bands and overlays the selected lake's annual values and status line. The
+#'   two trend panels show point estimates with approximate 95% intervals.
+#'
 #' @importFrom grDevices dev.new rgb
-#' @importFrom graphics axis layout points polygon
-#' 
+#' @importFrom graphics abline axis layout lines par plot points polygon text
 #' @export
 #' 
 plot_numeric_assessment <- function(

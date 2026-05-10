@@ -2,47 +2,32 @@
 % Please edit documentation in R/discreteClassAssessment.R
 \name{discreteClassAssessment}
 \alias{discreteClassAssessment}
-\title{Discrete Class Assessment for Yearly Index Values}
+\title{Classify yearly index values into discrete classes}
 \usage{
 discreteClassAssessment(yearly_spread, nClass = 10, proportionExtreme = 0.05)
 }
 \arguments{
-\item{yearly_spread}{Dataframe with one or more columns
-starting with \code{"year_"} containing calculated index values.}
+\item{yearly_spread}{Data frame with one or more columns whose names start
+with \code{year_}.}
 
-\item{nClass}{Integer, number of classes per year (default: 10).}
+\item{nClass}{Integer. Number of classes to create per year. Default is \code{10}.}
 
-\item{proportionExtreme}{Numeric, initial proportion of extreme values to
-exclude from inner quantile breaks (default: 0.05). Automatically adjusted
-if class sizes would be too small.}
+\item{proportionExtreme}{Numeric between 0 and 1. Initial proportion used for
+the lower and upper quantiles that define the inner range. Default is \code{0.05}.}
 }
 \value{
-A list containing:
-\describe{
-\item{\code{assessment}}{Matrix with class assignments}
-\item{\code{breaks}}{Matrix with class boundaries
-(rows=boundaries, columns=years).}
-\item{\code{nClass}}{Number of classes used.}
-\item{\code{proportionExtreme}}{Final proportion of extreme values used.}
-}
+A list with \code{assessment}, \code{breaks}, \code{nClass}, and
+\code{proportionExtreme}. \code{assessment} is the input data frame with additional
+\verb{<year>_class} columns. \code{breaks} contains the class boundaries for each year.
 }
 \description{
-This function performs discrete classification of index values from a
-into \code{nClass} classes per year, using actual min/max values as outer bounds
-and dynamically adjusting the extreme value proportion.
+Assigns each yearly index value to one of \code{nClass} classes. Break points are
+computed separately for each year using the observed minimum and maximum as
+outer bounds and equally spaced inner breaks between lower and upper quantiles.
 }
 \details{
-The function automatically identifies year columns (pattern: \code{"^year_"}).
-Breaks are constructed using actual data min/max for outer bounds and creates
+If the requested extreme proportion would create class sizes smaller
+than one class share, it is reduced to \code{1 / nClass}. #' Breaks are constructed using actual data min/max for outer bounds and creates
 \code{nClass} - 2 \bold{equally spaced} classes between the proportionExtreme quantiles
 (1 - \code{proportionExtreme} and  0 + \code{proportionExtreme}).
-}
-\examples{
-\dontrun{
-# Assuming yearly_spread has columns: ID, year_2020, year_2021, etc.
-result <- discreteClassAssessment(yearly_spread, nClass = 8, proportionExtreme = 0.03)
-head(result$assessment)
-result$breaks
-}
-
 }

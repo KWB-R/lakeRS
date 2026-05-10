@@ -1,7 +1,8 @@
 #' Start Job on openEO plattform
 #' 
-#' This function will implement and start a job on openEO. You need to be
-#' connected and logged in to run this function.
+#' Builds an openEO process graph for a Sentinel-2 collection, spatial and
+#' temporal extent, optional property filters, and selected bands. The graph is
+#' saved as the requested output format and started as an openEO batch job.
 #' 
 #' @param title A character defining the job title (can be a lake name, id). It
 #' is advised to use a unique name (i.e. including a timestamp) that is used on
@@ -75,8 +76,6 @@ start_openEO_job <- function(
     props <- NULL
   }
   
-  
-  
   if(is.numeric(geom)){
     se <- list(
       "crs" = crs, 
@@ -84,17 +83,6 @@ start_openEO_job <- function(
       "east" = geom[2], 
       "south" = geom[3],
       "west" = geom[4])
-    # geom2 <- list(c(geom["north"], geom["east"]),
-    #               c(geom["south"], geom["east"]),
-    #               c(geom["south"], geom["west"]),
-    #               c(geom["north"], geom["west"]),
-    #               c(geom["north"], geom["east"]))
-    # se_poly <- list(
-    #   "type" = "Polygon",
-    #   "crs" = crs,
-    #   "coordinates" = list(geom2)
-    # )
-    
   } else if(is.list(geom)){
     geom2 <- lapply(geom, function(x){x[2:1]})
     geom2[[length(geom2) + 1]] <- geom2[[1]]

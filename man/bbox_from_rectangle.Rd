@@ -2,21 +2,31 @@
 % Please edit documentation in R/bbox_from.R
 \name{bbox_from_rectangle}
 \alias{bbox_from_rectangle}
-\title{Bounding Box from rectangle}
+\title{Create a buffered bounding box around a rectangle}
 \usage{
 bbox_from_rectangle(top_lat, bottom_lat, left_lon, right_lon, meters = 20)
 }
 \arguments{
-\item{top_lat, bottom_lat}{Latitude of the bottom and top of the rectangle
-in WGS 84 EPSG:4326 (--> Top value is higher than bottom value)}
+\item{top_lat}{Numeric scalar. Northern latitude of the rectangle in WGS 84
+(\code{EPSG:4326}). Must be greater than \code{bottom_lat}.}
 
-\item{left_lon, right_lon}{Longitude of the left and right side of the
-rectangle in WGS 84 EPSG:4326 (--> right side value is higher than left side
-value)}
+\item{bottom_lat}{Numeric scalar. Southern latitude of the rectangle in WGS 84
+(\code{EPSG:4326}).}
 
-\item{meters}{The buffer distance in m around the rectangle to create the
-bounding box (Needs to be > 0)}
+\item{left_lon}{Numeric scalar. Western longitude of the rectangle in WGS 84
+(\code{EPSG:4326}). Must be smaller than \code{right_lon}.}
+
+\item{right_lon}{Numeric scalar. Eastern longitude of the rectangle in WGS 84
+(\code{EPSG:4326}).}
+
+\item{meters}{Numeric scalar greater than zero. Buffer distance in meters.
+Default is \code{20}.}
+}
+\value{
+A named numeric vector with elements \code{north}, \code{east}, \code{south}, and
+\code{west}.
 }
 \description{
-Bounding Box from rectangle
+Expands a latitude-longitude rectangle by a geodesic buffer distance and
+returns the resulting north, east, south, and west limits.
 }

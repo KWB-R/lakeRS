@@ -1,12 +1,21 @@
-#' Plot of images per day and year
-#' 
-#' @param vDate A vector of image dates
-#' @param vCoverage A dataframe of scene proportion per image created by 
-#' [nc_scene_per_image()]
-#' @param upperLimits Vector of Numerical values between 0 and 1 that are used
-#' as upper limits of coverage intervals. The number of intervals is flexible.
-#' 
-#' @importFrom graphics legend mtext
+#' Plot image availability and scene coverage by year
+#'
+#' Visualizes image dates over the day of year, grouped by year, and colors each
+#' image according to a scene-coverage proportion.
+#'
+#' @param vDate Date vector of image acquisition dates.
+#' @param vCoverage Optional numeric vector or one-column data frame of scene
+#'   proportions per image, such as the `coverage` column from
+#'   [nc_scene_per_image()]. If `NULL`, coverage is shown as missing.
+#' @param upperLimits Numeric vector of upper interval limits between 0 and 1.
+#'   Default is `c(0.05, 0.1, 0.3, 0.5, 0.75, 1)`.
+#'
+#' @return No explicit return value. The function draws a base R plot.
+#'
+#' @details Duplicate images on the same day of year are vertically offset within
+#'   the year row. The right axis shows the number of images per year.
+#'
+#' @importFrom graphics axis legend mtext par plot rect
 #' @importFrom grDevices colorRampPalette
 #' @export
 #' 
@@ -47,8 +56,9 @@ plot_scene_coverage <- function(
   plot(x = 0, y = 0, type = "n", 
        xlim = c(1-0.5,366-0.5), xaxs = "i",
        ylim = c(1-0.5, length(y)+0.5), yaxs = "i",
-       xlab = "Day of the year", ylab = "", xaxt = "n", yaxt = "n", 
-       xaxs = "i")
+       xlab = "Day of the year", ylab = "", 
+       xaxt = "n", yaxt = "n"
+  )
   axis(side = 1, at = 1:366, labels = 1:366)
   axis(side = 2, at = length(yearNumbers):1, yearNumbers, las = 2)
   for(i in seq_along(y)){

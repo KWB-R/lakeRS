@@ -2,19 +2,24 @@
 % Please edit documentation in R/plot_layer_map_layer.R
 \name{plot_scale}
 \alias{plot_scale}
-\title{Define plot region scale}
+\title{Adjust base-graphics plot size to a target aspect ratio}
 \usage{
 plot_scale(pin_w, pin_h)
 }
 \arguments{
-\item{pin_w}{widthsize}
+\item{pin_w}{Numeric scalar. Relative target width.}
 
-\item{pin_h}{hightsize}
+\item{pin_h}{Numeric scalar. Relative target height.}
+}
+\value{
+The result of \code{\link[graphics:par]{graphics::par()}} is returned invisibly by \code{par()}.
 }
 \description{
-Define plot region scale
+Sets the graphics parameters \code{pin} and \code{mai} so that a plot region matches a
+target width-to-height ratio while remaining centered in the device.
 }
 \details{
-both values will be treated relatively and will adjust the plot margin to
-the device size
+If the current graphics device is too small to accommodate the
+requested region, a new device is opened and the scaling is recalculated.
 }
+\keyword{internal}

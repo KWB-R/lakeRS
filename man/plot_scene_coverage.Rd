@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_scene_coverage.R
 \name{plot_scene_coverage}
 \alias{plot_scene_coverage}
-\title{Plot of images per day and year}
+\title{Plot image availability and scene coverage by year}
 \usage{
 plot_scene_coverage(
   vDate,
@@ -11,14 +11,23 @@ plot_scene_coverage(
 )
 }
 \arguments{
-\item{vDate}{A vector of image dates}
+\item{vDate}{Date vector of image acquisition dates.}
 
-\item{vCoverage}{A dataframe of scene proportion per image created by
-\code{\link[=nc_scene_per_image]{nc_scene_per_image()}}}
+\item{vCoverage}{Optional numeric vector or one-column data frame of scene
+proportions per image, such as the \code{coverage} column from
+\code{\link[=nc_scene_per_image]{nc_scene_per_image()}}. If \code{NULL}, coverage is shown as missing.}
 
-\item{upperLimits}{Vector of Numerical values between 0 and 1 that are used
-as upper limits of coverage intervals. The number of intervals is flexible.}
+\item{upperLimits}{Numeric vector of upper interval limits between 0 and 1.
+Default is \code{c(0.05, 0.1, 0.3, 0.5, 0.75, 1)}.}
+}
+\value{
+No explicit return value. The function draws a base R plot.
 }
 \description{
-Plot of images per day and year
+Visualizes image dates over the day of year, grouped by year, and colors each
+image according to a scene-coverage proportion.
+}
+\details{
+Duplicate images on the same day of year are vertically offset within
+the year row. The right axis shows the number of images per year.
 }

@@ -2,29 +2,32 @@
 % Please edit documentation in R/find_trends.R
 \name{find_trends}
 \alias{find_trends}
-\title{Identifies lake with highest trends, good or bad}
+\title{Rank lakes by short- or long-term trend}
 \usage{
 find_trends(
   numericAssessment,
   trendType,
-  decreasing = FALSE,
+  bestTrendFirst = FALSE,
   outputVector = "lakeID"
 )
 }
 \arguments{
-\item{numericAssessment}{The numeric assessment list created by
-\code{\link[=numericAssessment]{numericAssessment()}}}
+\item{numericAssessment}{A list created by \code{\link[=numericAssessment]{numericAssessment()}}.}
 
-\item{trendType}{Either "short" or "long"}
+\item{trendType}{Character scalar, usually \code{"short"} or \code{"long"}, selecting
+the column \verb{trend_<trendType>}.}
 
-\item{decreasing}{logical, sort order increasing or decreasing (default)?}
+\item{bestTrendFirst}{Logical. Passed to the ordering step. A good Trend is
+a negative trend, indicating a decrease in eutrophication.}
 
-\item{outputVector}{One of "lakeID" (default), "lakeName" or "rowNumber"}
+\item{outputVector}{Character scalar. One of \code{"lakeID"}, \code{"lakeName"}, or
+\code{"rowNumber"}. Determines what is returned.}
 }
 \value{
-Ordered vector according to the trend of lake names, lake IDs or
-rownumbers
+An ordered vector of lake IDs, lake names, or row numbers. Rows with
+missing trend values are removed from the ranking.
 }
 \description{
-Identifies lake with highest trends, good or bad
+Orders lakes or rows from a \code{\link[=numericAssessment]{numericAssessment()}} result according to the
+selected trend column.
 }

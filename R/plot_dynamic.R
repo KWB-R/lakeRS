@@ -1,43 +1,37 @@
-#' Plot dynamic time series with uncertainty intervals for environmental data
+#' Plot annual dynamics with optional uncertainty intervals
 #'
-#' Creates a base R plot visualizing multiple time series (medians/averages) 
-#' over 365 days of the year,with optional 50% and/or 95% quantile intervals as 
-#' shaded polygons, monthly separators, and an optional reference line 
-#' (e.g., pixel data). 
-#' Auto-generates quantile data.frames from mean/sd.
+#' Draws one or more 365-day time series and optionally overlays 50% and 95%
+#' interval polygons. The function is designed for lake-level or cluster-level
+#' dynamics derived from [dynamic_per_pixel()] or [combine_years_dynamic()].
 #'
-#' @param v_averageList List of numeric vectors (length 365); medians/averages 
-#' per day of year. Single vectors are automatically wrapped in a list.
-#' @param v_sdList List of numeric vectors (length 365), or NULL. Standard 
-#' deviations per day. Auto-generates \code{df_q50List} (IQR via 0.674 x sd) and 
-#' \code{df_q95List} (1.96 x sd).Single vectors coerced to lists. 
-#' Default: NULL (no uncertainty shading).
-#' @param df_q50List List of data.frames (365 rows, 2 cols: "q_0.25", "q_0.75"), 
-#' or NULL/single data.frame.50% quantile intervals. Takes precedence if both 
-#' quantile lists provided. 
-#' @param df_q95List List of data.frames (365 rows, 2 cols: "q_0.025", "q_0.975"), 
-#' or NULL/single data.frame. 95% quantile intervals. 
-#' @param TScolors Character vector of colors for time series (default: 
-#' \code{lakeRS::tenClusterColors$color}).Recycled to match \code{v_averageList} 
-#' length.
-#' @param TSnames Character vector of names for legend entries (time series), 
-#' or empty string/NULL (no legend). Length should match \code{v_averageList}.
-#' @param df_reference Data.frame (optional; cols: day 1-365, reference values), 
-#' e.g., ground truth data.
-#' @param RefName Character; legend name for reference line (dashed, black). 
-#' Default: NULL.
-#' @param lakeName Character; plot title prefix (e.g., lake identifier). 
-#' Default: "".
-#' @param ylab Character; y-axis label (e.g., "Chlorophyll-a Index"). 
-#' Default: "Index".
-#' @param ylim Numeric vector (2 elements); manual y-limits. 
-#' Auto-computed with 10% padding if NULL.
+#' @param v_averageList Numeric vector or list of numeric vectors with one value
+#'   per day of year.
+#' @param v_sdList Optional numeric vector or list of vectors with standard
+#'   deviations. If supplied, 50% and 95% intervals are approximated from the
+#'   standard deviations.
+#' @param df_q50List Optional data frame or list of data frames with lower and
+#'   upper 50% interval columns.
+#' @param df_q95List Optional data frame or list of data frames with lower and
+#'   upper 95% interval columns.
+#' @param TScolors Character vector of colors for the time series and polygons.
+#' @param TSnames Optional character vector of legend names for the time series.
+#' @param df_reference Optional two-column data frame with reference day and
+#'   value columns.
+#' @param RefName Optional character scalar for the reference-line legend.
+#' @param lakeName Character scalar used as plot title prefix.
+#' @param ylab Character scalar. Y-axis label.
+#' @param ylim Optional numeric vector of length two with y-axis limits.
 #'
-#' @return Invisible NULL (plots directly; no return value). 
-#' Legend positioned dynamically at top-left.
-#' 
+#' @return No explicit return value. The function draws a base R plot.
+#'
+#' @details Month separators and labels are drawn for a non-leap 365-day year.
+#'   Missing interval values are removed with [rm_na_for_polygon()] before
+#'   polygons are drawn.
+#'
+#' @importFrom grDevices col2rgb rgb
+#' @importFrom graphics abline legend lines mtext par plot polygon
 #' @export
-#'
+#' 
 plot_dynamic <- function(
     v_averageList, v_sdList = NULL, df_q50List = NULL, df_q95List = NULL, 
     TScolors = lakeRS::tenClusterColors$color, TSnames = NULL, 
@@ -162,7 +156,7 @@ plot_dynamic <- function(
       bg = "black",
       box.lwd = NA,
       cex = 0.9,
-      text.col = "white", )
+      text.col = "white")
     for(i in seq_along(v_averageList)[-1]){
       l <- legend(
         x = l$rect$left + l$rect$w,
@@ -197,18 +191,19 @@ plot_dynamic <- function(
   }
 }
 
-#' Remove NA values symmetrically for polygon plotting
+#' Remove missing coordinates before polygon plotting
 #'
-#' Prepares x/y vectors for \code{\link[graphics:polygon]{polygon()}} by 
-#' removing corresponding NAs from either vector while preserving order. Ensures 
-#' closed polygons plot correctly despite missing data. Used internally by 
-#' \code{\link{plot_dynamic}} for shaded uncertainty regions.
+#' Removes coordinate pairs for which either the x or y value is missing, so that
+#' [graphics::polygon()] receives aligned coordinate vectors.
 #'
-#' @param x_v Numeric vector; x-coordinates 
-#' @param y_v Numeric vector; y-coordinates (same length as \code{x_v})
+#' @param x_v Numeric vector of x coordinates.
+#' @param y_v Numeric vector of y coordinates with the same length as `x_v`.
 #'
-#' @return List with \code{x}, \code{y} (NA-stripped vectors of equal length).
+#' @return A list with elements `x` and `y`, both without coordinates associated
+#'   with missing values.
 #'
+#' @keywords internal
+#' 
 rm_na_for_polygon <- function(x_v, y_v){
   if(any(is.na(y_v))){
     x_v <- x_v[!is.na(y_v)]

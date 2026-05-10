@@ -2,16 +2,25 @@
 % Please edit documentation in R/nc_scene_per_image.R
 \name{nc_scene_per_image}
 \alias{nc_scene_per_image}
-\title{Calculates the proportion of a specified scene in an image}
+\title{Calculate scene-class coverage per image}
 \usage{
 nc_scene_per_image(nc, scene = "clouds")
 }
 \arguments{
-\item{nc}{The output of \code{\link[=open_netcdf]{open_netcdf()}} function}
+\item{nc}{A list returned by \code{\link[=open_netcdf]{open_netcdf()}}.}
 
-\item{scene}{Character defining the scene. Can be one of "clouds", "water",
-"snow" or "shadows"}
+\item{scene}{Character scalar. One of \code{"clouds"}, \code{"water"}, \code{"snow"}, or
+\code{"shadows"}.}
+}
+\value{
+A \code{data.frame} with columns \code{date} and \code{coverage}. \code{coverage} is the
+proportion of pixels in the selected scene group for each image.
 }
 \description{
-Calculates the proportion of a specified scene in an image
+Calculates the proportion of pixels belonging to a selected Sentinel-2 SCL
+scene group for each image in a netCDF data cube.
+}
+\details{
+Scene groups are mapped to SCL codes as follows: clouds = 8, 9, 10;
+water = 6; snow = 11; shadows = 2, 3.
 }

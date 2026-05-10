@@ -2,7 +2,7 @@
 % Please edit documentation in R/cluster_analysis.R
 \name{prepare_for_clustering}
 \alias{prepare_for_clustering}
-\title{Pre-processing done before cluster analysis}
+\title{Prepare pixel dynamics for clustering}
 \usage{
 prepare_for_clustering(
   moving_averages_matrix,
@@ -11,26 +11,28 @@ prepare_for_clustering(
 )
 }
 \arguments{
-\item{moving_averages_matrix}{A matrix of p pixels as column and 365 days as
-rows of the moving averages of one index as created by \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
+\item{moving_averages_matrix}{Matrix or data frame with days as rows and
+pixels as columns. The first column is dropped before processing, matching
+outputs that include a day-of-year column.}
 
-\item{correlate_first}{If TRUE, Pearson correlation between pixels will be
-used for clustering instead of Index values. This results in a clustering
-based on different shapes of the dynamic.}
+\item{correlate_first}{Logical. If \code{TRUE}, pixels are represented by their
+Pearson correlation with a reference set of pixels.}
 
-\item{maxPixels}{The maximum numbers of pixel used for cluster analysis.
-Leave NULL to use all pixels.}
+\item{maxPixels}{Optional integer. Maximum number of pixels to retain. If not
+\code{NULL}, a reproducible random sample is drawn.}
 }
 \value{
-A matrix either with data per pixels or correlation between pixels
-used for following cluster analysis
+A numeric matrix used as input for clustering. Columns represent
+pixels when \code{correlate_first = FALSE}; otherwise the matrix contains rounded
+correlation profiles.
 }
 \description{
-Pre-processing done before cluster analysis
+Cleans and optionally transforms a pixel-by-day moving-average matrix before
+k-means clustering.
 }
 \details{
-If correlate first, pixels are identified as outliers and removed if there
-not at least 5\% other pixels that correlate at least 0.95. For example, given
-1000 correlated pixels, the evaluated pixels is not an outlier if it
-correlates to >= 50 pixels >= 0.95.
+Values are rounded with \code{\link[=signif]{signif()}} before clustering. Depending on
+the NA pattern, the function removes either rows with missing values or
+pixels with missing values and reports removals via warnings. If correlation
+pre-processing is requested, at most 1,000 reference pixels are sampled.
 }

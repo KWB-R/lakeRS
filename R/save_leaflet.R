@@ -1,11 +1,14 @@
-#' Save a leaflet as html
-#' 
-#' By adding content to the html it is assured that icons are scaled according
-#' to the device. In this way the map can be used by mobile devices.
-#' 
-#' @param x Leaflet object to be saved
-#' @param file Filename including path
-#' 
+#' Save a leaflet map as a self-contained HTML file
+#'
+#' Adds a mobile-friendly viewport meta tag to a leaflet widget and saves it as a
+#' self-contained HTML file.
+#'
+#' @param x A `leaflet`  object.
+#' @param file Character scalar. Output HTML file including path.
+#'
+#' @return The return value of [htmlwidgets::saveWidget()]. The main side effect
+#'   is writing `file`.
+#'
 #' @importFrom htmlwidgets prependContent saveWidget
 #' @importFrom htmltools tags
 #' @export

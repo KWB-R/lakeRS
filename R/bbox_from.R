@@ -1,12 +1,21 @@
-#' Bounding Box from point coordinate
-#' 
-#' @param lat,lon Latitude and longitude in WGS 84 EPSG:4326 
-#' @param meters The distance around the point to create the bounding box.
-#' Needs to be > 0.
-#' 
-#' @export
-#' 
+#' Create a bounding box around a point
+#'
+#' Calculates the north, east, south, and west limits of a square-like bounding
+#' box around a point in WGS 84 coordinates. The limits are computed by moving a
+#' fixed geodesic distance from the point in the four cardinal directions.
+#'
+#' @param lat Numeric scalar. Latitude of the center point in WGS 84
+#'   (`EPSG:4326`).
+#' @param lon Numeric scalar. Longitude of the center point in WGS 84
+#'   (`EPSG:4326`).
+#' @param meters Numeric scalar greater than zero. Distance in meters from the
+#'   point to each side of the bounding box. Default is `20`.
+#'
+#' @return A named numeric vector with elements `north`, `east`, `south`, and
+#'   `west`, suitable for [start_openEO_job()] or [display_geometry()].
+#'
 #' @importFrom geosphere destPoint
+#' @export
 #' 
 bbox_from_point <- function(lat, lon, meters = 20){
   c("north" = geosphere::destPoint(p = c(lon, lat), b = 0, d = meters)[2],
@@ -16,20 +25,27 @@ bbox_from_point <- function(lat, lon, meters = 20){
   )
 }
 
-#' Bounding Box from rectangle
-#' 
-#' @param top_lat,bottom_lat Latitude of the bottom and top of the rectangle 
-#' in WGS 84 EPSG:4326 (--> Top value is higher than bottom value)
-#' @param left_lon,right_lon Longitude of the left and right side of the 
-#' rectangle in WGS 84 EPSG:4326 (--> right side value is higher than left side
-#' value)
-#' @param meters The buffer distance in m around the rectangle to create the 
-#' bounding box (Needs to be > 0)
-#' 
-#' @export
-#' 
+#' Create a buffered bounding box around a rectangle
+#'
+#' Expands a latitude-longitude rectangle by a geodesic buffer distance and
+#' returns the resulting north, east, south, and west limits.
+#'
+#' @param top_lat Numeric scalar. Northern latitude of the rectangle in WGS 84
+#'   (`EPSG:4326`). Must be greater than `bottom_lat`.
+#' @param bottom_lat Numeric scalar. Southern latitude of the rectangle in WGS 84
+#'   (`EPSG:4326`).
+#' @param left_lon Numeric scalar. Western longitude of the rectangle in WGS 84
+#'   (`EPSG:4326`). Must be smaller than `right_lon`.
+#' @param right_lon Numeric scalar. Eastern longitude of the rectangle in WGS 84
+#'   (`EPSG:4326`).
+#' @param meters Numeric scalar greater than zero. Buffer distance in meters.
+#'   Default is `20`.
+#'
+#' @return A named numeric vector with elements `north`, `east`, `south`, and
+#'   `west`.
+#'
 #' @importFrom geosphere destPoint
-#' 
+#' @export
 bbox_from_rectangle <- function(
     top_lat, bottom_lat, left_lon, right_lon, meters = 20
 ){
@@ -43,41 +59,4 @@ bbox_from_rectangle <- function(
     "west" = geosphere::destPoint(
       p = c(left_lon, top_lat),b = -90, d = meters)[1]
   )
-}
-
-
-#' Bounding Box from rectangle
-#' 
-#' @param geom_sfc A simple feature polygon in WGS 84 EPSG:4326. 
-#' See example how to create a sfc_POLYGON from Well-known-text (wkt) Geometry.
-#' @param meters The buffer distance in m around the polygon to create the 
-#' bounding box (Needs to be > 0)
-#' 
-#' @examples
-#' library(sf)
-#' x <- data.frame(
-#'  "wkt" = paste0(
-#'    "POLYGON ((13.22103 52.61554, 13.22112 52.61558,13.22118 52.6156,",
-#'    " 13.2212 52.61561, 13.22123 52.61561, 13.22127 52.61562))")
-#' )
-#' x$wkt
-#' is(x$wkt)
-#' geom_sfc <- sf::st_as_sf(x = x, wkt = "wkt", crs = 4326)
-#' geom_sfc
-#' is(geom_sfc)
-#' 
-#' @export
-#' 
-#' 
-bbox_from_polygon <- function(
-    geom_sfc, meters = 20
-){
-  bb <- attributes(geom_sfc)$bbox
-
-  bbox_from_rectangle(
-    top_lat = bb[["ymax"]], 
-    bottom_lat = bb[["ymin"]],
-    left_lon = bb[["xmin"]], 
-    right_lon = bb[["xmax"]], 
-    meters = meters)
 }

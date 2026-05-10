@@ -2,7 +2,7 @@
 % Please edit documentation in R/seasonal_index_per_pixel.R
 \name{seasonal_index_per_pixel}
 \alias{seasonal_index_per_pixel}
-\title{Calculate an index per pixel averaged over time}
+\title{Calculate a seasonal index value for each pixel}
 \usage{
 seasonal_index_per_pixel(
   imageIndex,
@@ -12,34 +12,31 @@ seasonal_index_per_pixel(
 )
 }
 \arguments{
-\item{imageIndex}{the data list created by \code{\link[=ndi_per_image]{ndi_per_image()}}}
+\item{imageIndex}{A list created by \code{\link[=ndi_per_image]{ndi_per_image()}} containing image-wise
+\code{RSindex} matrices, time information, coordinates, and CRS.}
 
-\item{nc}{The netcdf list returned by \code{\link[=open_netcdf]{open_netcdf()}}}
+\item{nc}{A netCDF list returned by \code{\link[=open_netcdf]{open_netcdf()}}. Used to load the SCL band
+for the same year and months as \code{imageIndex}.}
 
-\item{water_scenes_only}{By default only pixels classified as water scene are
-used for the yearly average per pixel. If False, all values are included no
-except for cloud and snow scenes.}
+\item{water_scenes_only}{Logical. If \code{TRUE}, processing keeps SCL class 6
+(water) before averaging. If \code{FALSE}, the current code calls \code{\link[=scl_mask]{scl_mask()}}
+with SCL classes 8 to 11; because \code{scl_filter()} currently ignores \code{invert},
+this mode should be checked before use.}
 
-\item{pixelQualityThreshold}{The quality is defined as the minimum proportion
-a pixel needs to be defined as water scene to be included.}
+\item{pixelQualityThreshold}{Numeric between 0 and 1. Minimum water-scene
+proportion required for a pixel to be retained in the seasonal index.}
 }
 \value{
-A list of
-\itemize{
-\item lakeInfo: A character of lake Name and ID or whatever is provided as
-meta data#
-\item A list per season
-\itemize{
-\item RSindex: A Matrix of the whole rechtangle containing the index per pixel
-for the whole season
-\item QualityThreshold: The minimum proportion a pixel is required to be
-identified as water during one season
-\item minValuesPerPixel: The mininum number of images used for index calculation
-ofone pixel (Quality_threshold x Images_of_Season)
-\item validPixel: The number of pixels above Quality Threshold
-}
-}
+A list with \code{x}, \code{y}, \code{crs}, \code{year}, \code{QualityThreshold}, \code{RSindex}, and
+\code{sceneProportions}. \code{RSindex} is a matrix of seasonal pixel index values;
+pixels below the water-quality threshold are set to \code{NA}.
 }
 \description{
-Calculate an index per pixel averaged over time
+Filters image-wise index matrices by Sentinel-2 SCL information, averages the
+remaining index values pixel by pixel, and removes pixels that do not meet a
+water-scene quality threshold.
+}
+\details{
+Water-scene proportions are calculated by \code{\link[=waterscene_proportion]{waterscene_proportion()}}.
+A warning is issued if no pixel meets \code{pixelQualityThreshold}.
 }

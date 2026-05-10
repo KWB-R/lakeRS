@@ -1,18 +1,26 @@
-#' Plot the histrom of all pixel NDTrIs of a lake for one year
-#' 
-#' @param lakeIndex the output of [seasonal_index_per_lake()]
-#' @param lakeName,indexName Character strings of the lake and index name used
-#' in the plot
-#' 
-#' @importFrom graphics abline hist lines par text
+#' Plot the distribution of pixel index values for one lake-year
 #'
+#' Draws a histogram and density curve of all valid pixel-level index values for
+#' a lake in one year. The selected modal value and median are highlighted.
+#'
+#' @param lakeIndex A list created by [seasonal_index_per_lake()].
+#' @param lakeName Character scalar used in the plot title.
+#' @param indexName Character scalar used as x-axis label.
+#'
+#' @return `NULL` if no valid pixels are available; otherwise no explicit return
+#'   value. The function draws a base R plot.
+#'
+#' @details The current implementation reads `lakeIndex$nValidePixel`, matching
+#'   the current spelling in [seasonal_index_per_lake()].
+#'
+#' @importFrom graphics abline hist lines par text
 #' @export
 #' 
 plot_lake_index_histogram <- function(
-    lakeIndex, lakeName, indexName
+    lakeIndex, lakeName = "", indexName = ""
 ){
   year <- lakeIndex$year
-  vp <- lakeIndex$nValidePixel
+  vp <- lakeIndex$nValidPixel
  
   if(vp == 0L){
     print("No valid pixel values for ", lakeName, " in ", year)

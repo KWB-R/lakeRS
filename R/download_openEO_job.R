@@ -1,23 +1,26 @@
-#' Downloads an openEO job
-#' 
-#' This function downloads a job from openEO if it is finished. You need to be
-#' connected and logged in to run this function.
-#' 
-#' @param title Character string. The same title that has been used to start the
-#' job by function [start_openEO_job()]. If ID is specified the title is still
-#' used for the folder.
-#' @param path The path where to download the data to
-#' @param recentJob If TRUE, only the last 10 jobs are searched for the title 
-#' @param ID If specified the Job ID is used instead of jobs title
-#' @param overwrite If TRUE (Default is FALSE) existing folder will be used and 
-#' previous data might be overwritten
-#' 
-#' @return 
-#' Function only returns the information to which folder data is downloaded
-#' 
-#' @export
-#' 
+#' Download results from a finished openEO job
+#'
+#' Searches for a finished openEO job by title or ID and downloads its results to
+#' a local folder. The function assumes that the user is already connected and
+#' authenticated with openEO.
+#'
+#' @param title Character scalar. Job title to search for and folder name used
+#'   under `path`. If `ID` is supplied, `title` is still used as the local folder
+#'   name.
+#' @param path Character scalar. Directory into which the job folder is written.
+#' @param recentJob Logical. If `TRUE`, only the ten most recent jobs are
+#'   searched when `ID` is not supplied.
+#' @param ID Optional openEO job identifier or list index. If supplied, this is
+#'   used instead of title matching.
+#' @param overwrite Logical. If `FALSE`, the function stops when the target
+#'   directory already exists. Default is `FALSE`.
+#'
+#' @return Invisibly returns `NULL`. On success, job assets are written to
+#'   `file.path(path, title)`. If the job is not finished, a message is printed
+#'   and no files are downloaded.
+#'
 #' @importFrom openeo list_jobs download_results
+#' @export
 #' 
 download_openEO_job <- function(
     title, path, recentJob = TRUE, ID = NULL, overwrite = FALSE

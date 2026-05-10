@@ -2,24 +2,29 @@
 % Please edit documentation in R/numericAssessment.R
 \name{determine_status}
 \alias{determine_status}
-\title{The average status of an index over n years}
+\title{Calculate moving-average status over multiple years}
 \usage{
 determine_status(yearly_spread, n_years = 3)
 }
 \arguments{
-\item{yearly_spread}{A dataframe of lakes or pixels as row and the yearly
-index values as columns as created by \code{\link[=index_spread]{index_spread()}}}
+\item{yearly_spread}{A data frame with one or more columns whose names start
+with \code{year_}. Rows represent lakes or pixels.}
 
-\item{n_years}{The number of years used for the moving average. By defaul
-this is 3 years.}
+\item{n_years}{Integer. Number of consecutive years used for each moving
+average window. Default is \code{3}.}
 }
 \value{
-A list of 2:
-
-A matrix, where number of rows equal the number of lakes (in the same order
-as in the yearly_spread input table) and number of correspond to the number
-of years assessed
+A list with \code{status}, a matrix of moving-average values, and \code{nYears},
+the window length used. Status columns are named after the final year of
+each window and suffixed with \verb{_status}.
 }
 \description{
-The average status of an index over n years
+Computes a trailing moving average of yearly index columns for each lake or
+pixel. The function is an internal helper used by \code{\link[=numericAssessment]{numericAssessment()}}.
 }
+\details{
+Missing values are not removed (\code{mean()} is called without
+\code{na.rm = TRUE}), so a missing value in any year of a window yields \code{NA} for
+that row and status year.
+}
+\keyword{internal}

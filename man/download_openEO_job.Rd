@@ -2,7 +2,7 @@
 % Please edit documentation in R/download_openEO_job.R
 \name{download_openEO_job}
 \alias{download_openEO_job}
-\title{Downloads an openEO job}
+\title{Download results from a finished openEO job}
 \usage{
 download_openEO_job(
   title,
@@ -13,23 +13,28 @@ download_openEO_job(
 )
 }
 \arguments{
-\item{title}{Character string. The same title that has been used to start the
-job by function \code{\link[=start_openEO_job]{start_openEO_job()}}. If ID is specified the title is still
-used for the folder.}
+\item{title}{Character scalar. Job title to search for and folder name used
+under \code{path}. If \code{ID} is supplied, \code{title} is still used as the local folder
+name.}
 
-\item{path}{The path where to download the data to}
+\item{path}{Character scalar. Directory into which the job folder is written.}
 
-\item{recentJob}{If TRUE, only the last 10 jobs are searched for the title}
+\item{recentJob}{Logical. If \code{TRUE}, only the ten most recent jobs are
+searched when \code{ID} is not supplied.}
 
-\item{ID}{If specified the Job ID is used instead of jobs title}
+\item{ID}{Optional openEO job identifier or list index. If supplied, this is
+used instead of title matching.}
 
-\item{overwrite}{If TRUE (Default is FALSE) existing folder will be used and
-previous data might be overwritten}
+\item{overwrite}{Logical. If \code{FALSE}, the function stops when the target
+directory already exists. Default is \code{FALSE}.}
 }
 \value{
-Function only returns the information to which folder data is downloaded
+Invisibly returns \code{NULL}. On success, job assets are written to
+\code{file.path(path, title)}. If the job is not finished, a message is printed
+and no files are downloaded.
 }
 \description{
-This function downloads a job from openEO if it is finished. You need to be
-connected and logged in to run this function.
+Searches for a finished openEO job by title or ID and downloads its results to
+a local folder. The function assumes that the user is already connected and
+authenticated with openEO.
 }

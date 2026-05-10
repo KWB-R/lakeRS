@@ -1,20 +1,21 @@
-#' Proprtions of all scenes and dervied water scene proportion
+#' Calculate water-scene proportions from SCL images
 #'
-#' @param scl_image The SCL layer of the image-wise data, created by one of the
-#' index per image functions: [ndi_per_image()]
+#' Computes per-pixel proportions for all Sentinel-2 SCL classes and derives a
+#' water-scene proportion after accounting for disturbance classes.
+#'
+#' @param scl_image A list of SCL matrices, typically loaded from the SCL band of
+#'   an [open_netcdf()] object for the same images used in an index calculation.
 #' 
-#' @details
-#' The water proportion is defined as all pixels that are "correctly" classified
-#' as water. Thus, disturbances that occur but are not a false classification 
-#' like clouds, snow or topographic impacts need to be removed before. After
-#' removing those pixels, the water classifiation should be 100% for a perfect 
-#' pixel
-#' 
-#' @return
-#' A list of 3:
-#'  - the water scene proportion per pixel
-#'  - the disturbance scene proportion per pixel
-#'  - A list of all individual scene proportions per pixel
+#' @return A list with `water`, `NoFalseDisturbance`, and `allScenes`. `water` is
+#'   the derived water-scene proportion per pixel; `NoFalseDisturbance` is the
+#'   proportion of pixels assigned to allowed disturbance classes; `allScenes` is
+#'   a list of per-class proportions.
+#'   
+#' @details The water proportion is defined as all pixels that are "correctly" classified
+#'   as water. Thus, disturbances that occur but are not a false classification 
+#'   like clouds, snow or topographic impacts need to be removed before. After
+#'   removing those pixels, the water classifiation should be 100% for a perfect 
+#'   pixel
 #' 
 #' @export
 #' 

@@ -2,16 +2,30 @@
 % Please edit documentation in R/combine_years.R
 \name{combine_years_dynamic}
 \alias{combine_years_dynamic}
-\title{Combine index dynamic of multiple years for a whole lake}
+\title{Combine whole-lake dynamics across years}
 \usage{
 combine_years_dynamic(indexDynamicList, years = NULL)
 }
 \arguments{
-\item{indexDynamicList}{A list of index dynamic created by \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
+\item{indexDynamicList}{A named or unnamed list of annual dynamic objects
+created by \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}. Each element must contain \code{lakeDynamic}
+with column \code{q_0.5} and \code{days_around_ma}.}
 
-\item{years}{A numeric vector of all years to be considered. If NULL, all
-available years will be used}
+\item{years}{Optional numeric vector of years to include. If \code{NULL}, all list
+elements are used. If the list is named, matching is performed on the names.}
+}
+\value{
+A list with \code{mean_of_median} and \code{sd_over_median}, each a numeric
+vector with one value per day of year.
 }
 \description{
-Combine index dynamic of multiple years for a whole lake
+Combines multiple annual outputs from \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}} into summary
+curves across years. For each day of year, the function averages the annual
+median lake dynamics and calculates the standard deviation across those annual
+medians.
+}
+\details{
+All selected dynamics must have been computed with the same
+\code{days_around_ma}; otherwise the function stops because the smoothing windows
+are not comparable.
 }

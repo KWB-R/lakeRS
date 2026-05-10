@@ -2,21 +2,21 @@
 % Please edit documentation in R/plot_dynamic.R
 \name{rm_na_for_polygon}
 \alias{rm_na_for_polygon}
-\title{Remove NA values symmetrically for polygon plotting}
+\title{Remove missing coordinates before polygon plotting}
 \usage{
 rm_na_for_polygon(x_v, y_v)
 }
 \arguments{
-\item{x_v}{Numeric vector; x-coordinates}
+\item{x_v}{Numeric vector of x coordinates.}
 
-\item{y_v}{Numeric vector; y-coordinates (same length as \code{x_v})}
+\item{y_v}{Numeric vector of y coordinates with the same length as \code{x_v}.}
 }
 \value{
-List with \code{x}, \code{y} (NA-stripped vectors of equal length).
+A list with elements \code{x} and \code{y}, both without coordinates associated
+with missing values.
 }
 \description{
-Prepares x/y vectors for \code{\link[graphics:polygon]{polygon()}} by
-removing corresponding NAs from either vector while preserving order. Ensures
-closed polygons plot correctly despite missing data. Used internally by
-\code{\link{plot_dynamic}} for shaded uncertainty regions.
+Removes coordinate pairs for which either the x or y value is missing, so that
+\code{\link[graphics:polygon]{graphics::polygon()}} receives aligned coordinate vectors.
 }
+\keyword{internal}

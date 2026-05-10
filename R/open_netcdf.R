@@ -1,16 +1,23 @@
-#' Open netCDF file
-#' 
-#' @param filePath the path of the netCDF file
-#' @param fileName The file name including .nc ending. By default openEO 
-#' provides a file that is named "openEO.nc"
-#' 
-#' @return
-#' Returns a list of spatial and temporal variables, the netcdf CRS (coordinate 
-#' reference system) and the spatRaster of all layers
-#' 
+#' Open an openEO netCDF data cube
+#'
+#' Reads a netCDF file into a `terra` SpatRaster and extracts spatial, temporal,
+#' band, and CRS metadata used by the lakeRS processing workflow.
+#'
+#' @param filePath Character scalar. Directory containing the netCDF file.
+#' @param fileName Character scalar. File name including the `.nc` extension.
+#'   Default is `"openEO.nc"`.
+#'
+#' @return A list with `bands`, `x`, `y`, `t`, `t_date`, `crs`, and `SpRast`.
+#'   `x` and `y` are pixel-center coordinates, `t` contains numeric time steps,
+#'   and `t_date` converts these time steps to dates using origin
+#'   `1990-01-01`.
+#'
+#' @details The function stops if subdatasets in the netCDF file have different
+#'   row, column, or layer dimensions.
+#'
 #' @importFrom terra describe rast xFromCol yFromRow crs
-#' 
 #' @export
+#' 
 open_netcdf <- function(
     filePath, fileName = "openEO.nc"
 ){

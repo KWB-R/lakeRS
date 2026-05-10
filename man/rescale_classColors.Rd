@@ -2,13 +2,24 @@
 % Please edit documentation in R/plot_class_assessment.R
 \name{rescale_classColors}
 \alias{rescale_classColors}
-\title{Rescale class colors}
+\title{Rescale the default class color table}
 \usage{
 rescale_classColors(nClass)
 }
 \arguments{
-\item{nClass}{Number of Classes}
+\item{nClass}{Integer. Number of classes required.}
+}
+\value{
+A data frame with columns \code{class} and \code{color}, containing exactly
+\code{nClass} rows.
 }
 \description{
-Rescale class colors
+Adapts \code{lakeRS::tenClassColors} to an arbitrary number of classes for class
+assessment plots.
 }
+\details{
+If fewer than ten classes are requested, colors are sampled from the
+default ten-class palette. If more than ten classes are requested,
+additional colors are interpolated between neighboring palette entries.
+}
+\keyword{internal}

@@ -2,16 +2,26 @@
 % Please edit documentation in R/bbox_from.R
 \name{bbox_from_point}
 \alias{bbox_from_point}
-\title{Bounding Box from point coordinate}
+\title{Create a bounding box around a point}
 \usage{
 bbox_from_point(lat, lon, meters = 20)
 }
 \arguments{
-\item{lat, lon}{Latitude and longitude in WGS 84 EPSG:4326}
+\item{lat}{Numeric scalar. Latitude of the center point in WGS 84
+(\code{EPSG:4326}).}
 
-\item{meters}{The distance around the point to create the bounding box.
-Needs to be > 0.}
+\item{lon}{Numeric scalar. Longitude of the center point in WGS 84
+(\code{EPSG:4326}).}
+
+\item{meters}{Numeric scalar greater than zero. Distance in meters from the
+point to each side of the bounding box. Default is \code{20}.}
+}
+\value{
+A named numeric vector with elements \code{north}, \code{east}, \code{south}, and
+\code{west}, suitable for \code{\link[=start_openEO_job]{start_openEO_job()}} or \code{\link[=display_geometry]{display_geometry()}}.
 }
 \description{
-Bounding Box from point coordinate
+Calculates the north, east, south, and west limits of a square-like bounding
+box around a point in WGS 84 coordinates. The limits are computed by moving a
+fixed geodesic distance from the point in the four cardinal directions.
 }

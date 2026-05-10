@@ -1,33 +1,32 @@
-#' The assessment of eutriphication based on NDTrI Values
-#' 
-#' @param yearly_spread A dataframe of lakeName, lakeID and the yearly NDTrI 
-#' values as created by [index_spread()]
-#' @param statusYears The number of years used for the moving average. By default 
-#' this is 3 years.
-#' @param shortTermYears The number of years used for the short-term trend.
-#' @param longTermYears The number of years used for the short-term trend.
-#' 
-#' @details
-#' The status of NDTrI is determined as moving average over n years.
-#' 
-#' In order to rule out systematic errors based on weather conditions in a year,
-#' different hardware or algorithms, the difference between the overall median value
-#' of all lakes and years and the yearly median value of all lakes is added to the 
-#' NDTrI of a lake before the trends are calculated.
-#' Subsequantially, the trend is calculated as linear regression between previous
-#' years and adjusted NDTrI values.
-#' For a reliable trend assessment the number of lakes needs to be large enough 
-#' (n>10).
-#' 
-#' @return
-#' A list of 4: 
-#' "assessment": the yearly_spread dataframe  extended by status and trend 
-#' columns. For each time period, the trend column is the slope of the 
-#' regression line while error is the standard error of the slope.
-#' "periods": number of years used for status, short-term and long-term trend
-#' "overallMedian": median value of the whole dataset
-#' "yearlyMedians": median values of all lakes per year
-#' 
+#' Assess lake status and relative trends from yearly index values
+#'
+#' Adds moving-average status and relative short- and long-term trend estimates 
+#' to a wide table of yearly index values.
+#'
+#' @param yearly_spread A data frame with lake or pixel identifiers and yearly
+#'   index columns named `year_<year>`
+#' @param statusYears Integer. Number of years used for moving-average status.
+#'   Default is `3`.
+#' @param shortTermYears Integer. Number of years used for the short-term trend.
+#'   Default is `3`.
+#' @param longTermYears Integer. Number of years used for the long-term trend.
+#'   Default is `10`.
+#'
+#' @return A list with `assessment` and `periods`. `assessment` is the input data
+#'   frame extended by status and trend columns where possible. `periods` records
+#'   the three period lengths used.
+#'
+#' @details In order to rule out systematic errors based on weather conditions 
+#'   in a year, different hardware or algorithms, the difference between the 
+#'   overall median value of all lakes (or pixels) and years and the yearly 
+#'   median value of all lakes (or pixels) is added to each index per year before 
+#'   the trends are calculated. Thus, the trends of one lake (or pixel) are 
+#'   relative compared to the other lakes (or pixels) of the table. The trend is 
+#'   calculated as linear regression between previous years and adjusted NDI 
+#'   values.
+#'   For a reliable trend assessment the number of lakes (or pixels) needs to 
+#'   be large enough (n>10).
+#'
 #' @export
 #' 
 numericAssessment <- function(
@@ -93,19 +92,25 @@ numericAssessment <- function(
   )
 }
 
-#' The average status of an index over n years
-#' 
-#' @param yearly_spread A dataframe of lakes or pixels as row and the yearly 
-#' index values as columns as created by [index_spread()]
-#' @param n_years The number of years used for the moving average. By defaul 
-#' this is 3 years.
-#' 
-#' @return 
-#' A list of 2:
-#' 
-#' A matrix, where number of rows equal the number of lakes (in the same order
-#' as in the yearly_spread input table) and number of correspond to the number
-#' of years assessed
+#' Calculate moving-average status over multiple years
+#'
+#' Computes a trailing moving average of yearly index columns for each lake or
+#' pixel. The function is an internal helper used by [numericAssessment()].
+#'
+#' @param yearly_spread A data frame with one or more columns whose names start
+#'   with `year_`. Rows represent lakes or pixels.
+#' @param n_years Integer. Number of consecutive years used for each moving
+#'   average window. Default is `3`.
+#'
+#' @return A list with `status`, a matrix of moving-average values, and `nYears`,
+#'   the window length used. Status columns are named after the final year of
+#'   each window and suffixed with `_status`.
+#'
+#' @details Missing values are not removed (`mean()` is called without
+#'   `na.rm = TRUE`), so a missing value in any year of a window yields `NA` for
+#'   that row and status year.
+#'
+#' @keywords internal
 #' 
 determine_status <- function(
     yearly_spread, n_years = 3
@@ -124,12 +129,13 @@ determine_status <- function(
   
 }
 
-#' Trend of an Index over years
+#' Calculate adjusted linear trends over recent years
 #' 
 #' @param yearly_spread A data frame of lakes or pixels as row and the yearly 
-#' index values as columns as created by [index_spread()]
+#' index values as columns
 #' @param tyears The number of years used for the trend analysis.
-#' @param ttype The type of trend (either "short" or "long") as character string
+#' @param ttype Character scalar, either `"short"` or `"long"`. Used to name the
+#'   output columns.
 #' 
 #' @details
 #' In order to rule out systematic errors based on weather conditions in a year,
@@ -142,16 +148,13 @@ determine_status <- function(
 #' years and adjusted NDTrI values.
 #' For a reliable trend assessment the number of lakes needs to be large enough 
 #' (n>10).
+#' Only rows with complete data in all year columns are used to estimate
+#' the global and yearly medians for the bias correction. Individual row trends
+#' are returned as `NA` if any value in the selected trend window is missing.
 #' 
-#' @return 
-#' A list of 4: 
-#' "trends" is a matrix with one row per lake in the as in the 
-#' yearlyspread input table and two columns for each trend, short-term and 
-#' long-term. The trend is the slope of the regression line, and error is the
-#' standard error of the slope.
-#' "periods": number of years used for short-term and long-term trend
-#' "overallMedian": median value of the whole dataset
-#' "yearlyMedians": median values of all lakes per year
+#' @return A list with `trends`, `periodYear`, `overallMedian`, and
+#'   `yearlyMedians`. `trends` contains the slope and the standard error of the
+#'   slope for each row.
 #' 
 #' @importFrom stats lm
 #' 
@@ -201,30 +204,25 @@ determine_trend <- function(
 }
 
 
-#' Turn numerical trends into trend significance classes
+#' Convert numeric trend estimates to significance classes
 #'
-#' @param assessmentTable The output table created by [numericAssessment()]
-#' @param trendType Character string. Either "long" long-term or "short" for 
-#' short-term
-#' 
-#' @details
-#' The trend significance is 0 if 0 is within
-#' the range of ("trend - error" , "trend + error") (-> no 
-#' significant trend). If 0 is not within ("trend - error" , "trend + error") 
-#' but within ("trend - 2 x error" , "trend + 2 x error") the class is either
-#' -1 (low significant negative trend) or +1 (low significant positive trend). 
-#' If 0 is not even part of the larger interval the class is either -2 (highly 
-#' significant negative trend) or +2 (highly significant positive trend), where
-#' a positive trend describes the decrease of the trophic index.
-#' 
-#' The trend strength is the absolute value of the trend significance class 
-#' multiplied by the actual trend and -1. Thus a trend strength >> 0 is a 
-#' sigifinicant high decrease of trophic state and vice versa
-#' 
-#' @return 
-#' The assessmentTable expended by two columns for the trend significance and
-#' the trend strength
-#' 
+#' Adds categorical trend-significance and trend-strength columns to an
+#' assessment table containing trend estimates and standard errors.
+#'
+#' @param assessmentTable A data frame, typically `numericAssessment(...)$assessment`,
+#'   containing trend and error columns for the selected `trendType`.
+#' @param trendType Character scalar. Either `"long"` or `"short"`; selects
+#'   `trend_long`/`error_long` or `trend_short`/`error_short`.
+#'
+#' @return The input data frame extended by `trend_<trendType>_significance` and
+#'   `trend_<trendType>_strength`.
+#'
+#' @details Significance classes are `0` if zero lies within ±1 standard error,
+#'   `±1` if zero lies outside ±1 but inside ±2 standard errors, and `±2` if zero
+#'   lies outside ±2 standard errors. Positive trend estimates are converted to
+#'   negative classes, so class sign follows the package's interpretation that a
+#'   negative numerical trend indicates improvement of the trophic index.
+#'
 #' @export
 #' 
 trends_to_classes <- function(assessmentTable, trendType = "long"){

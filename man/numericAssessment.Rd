@@ -2,7 +2,7 @@
 % Please edit documentation in R/numericAssessment.R
 \name{numericAssessment}
 \alias{numericAssessment}
-\title{The assessment of eutriphication based on NDTrI Values}
+\title{Assess lake status and relative trends from yearly index values}
 \usage{
 numericAssessment(
   yearly_spread,
@@ -12,37 +12,36 @@ numericAssessment(
 )
 }
 \arguments{
-\item{yearly_spread}{A dataframe of lakeName, lakeID and the yearly NDTrI
-values as created by \code{\link[=index_spread]{index_spread()}}}
+\item{yearly_spread}{A data frame with lake or pixel identifiers and yearly
+index columns named \verb{year_<year>}}
 
-\item{statusYears}{The number of years used for the moving average. By default
-this is 3 years.}
+\item{statusYears}{Integer. Number of years used for moving-average status.
+Default is \code{3}.}
 
-\item{shortTermYears}{The number of years used for the short-term trend.}
+\item{shortTermYears}{Integer. Number of years used for the short-term trend.
+Default is \code{3}.}
 
-\item{longTermYears}{The number of years used for the short-term trend.}
+\item{longTermYears}{Integer. Number of years used for the long-term trend.
+Default is \code{10}.}
 }
 \value{
-A list of 4:
-"assessment": the yearly_spread dataframe  extended by status and trend
-columns. For each time period, the trend column is the slope of the
-regression line while error is the standard error of the slope.
-"periods": number of years used for status, short-term and long-term trend
-"overallMedian": median value of the whole dataset
-"yearlyMedians": median values of all lakes per year
+A list with \code{assessment} and \code{periods}. \code{assessment} is the input data
+frame extended by status and trend columns where possible. \code{periods} records
+the three period lengths used.
 }
 \description{
-The assessment of eutriphication based on NDTrI Values
+Adds moving-average status and relative short- and long-term trend estimates
+to a wide table of yearly index values.
 }
 \details{
-The status of NDTrI is determined as moving average over n years.
-
-In order to rule out systematic errors based on weather conditions in a year,
-different hardware or algorithms, the difference between the overall median value
-of all lakes and years and the yearly median value of all lakes is added to the
-NDTrI of a lake before the trends are calculated.
-Subsequantially, the trend is calculated as linear regression between previous
-years and adjusted NDTrI values.
-For a reliable trend assessment the number of lakes needs to be large enough
-(n>10).
+In order to rule out systematic errors based on weather conditions
+in a year, different hardware or algorithms, the difference between the
+overall median value of all lakes (or pixels) and years and the yearly
+median value of all lakes (or pixels) is added to each index per year before
+the trends are calculated. Thus, the trends of one lake (or pixel) are
+relative compared to the other lakes (or pixels) of the table. The trend is
+calculated as linear regression between previous years and adjusted NDI
+values.
+For a reliable trend assessment the number of lakes (or pixels) needs to
+be large enough (n>10).
 }

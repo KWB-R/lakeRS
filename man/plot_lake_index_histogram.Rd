@@ -2,16 +2,26 @@
 % Please edit documentation in R/plot_lake_index_histogram.R
 \name{plot_lake_index_histogram}
 \alias{plot_lake_index_histogram}
-\title{Plot the histrom of all pixel NDTrIs of a lake for one year}
+\title{Plot the distribution of pixel index values for one lake-year}
 \usage{
-plot_lake_index_histogram(lakeIndex, lakeName, indexName)
+plot_lake_index_histogram(lakeIndex, lakeName = "", indexName = "")
 }
 \arguments{
-\item{lakeIndex}{the output of \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}}
+\item{lakeIndex}{A list created by \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}.}
 
-\item{lakeName, indexName}{Character strings of the lake and index name used
-in the plot}
+\item{lakeName}{Character scalar used in the plot title.}
+
+\item{indexName}{Character scalar used as x-axis label.}
+}
+\value{
+\code{NULL} if no valid pixels are available; otherwise no explicit return
+value. The function draws a base R plot.
 }
 \description{
-Plot the histrom of all pixel NDTrIs of a lake for one year
+Draws a histogram and density curve of all valid pixel-level index values for
+a lake in one year. The selected modal value and median are highlighted.
+}
+\details{
+The current implementation reads \code{lakeIndex$nValidePixel}, matching
+the current spelling in \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}.
 }

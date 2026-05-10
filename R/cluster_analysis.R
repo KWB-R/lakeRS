@@ -1,34 +1,31 @@
-#' Find the number of clusters to use in kmeans
-#' 
-#' Based on the reduction of within cluster sum of squares
-#' 
-#' @param pixelDynamic The pixel data table of the output of [dynamic_per_pixel()]
-#' @param kMax Tha maximum number of clusters to be tested
-#' @param minimum_clusterSize The minimum size of a cluster allowed. By default
-#' 1% of all moving average pixels, need to be in a cluster. 
-#' @param plot_result Logical
-#' @param correlate_first If TRUE, Pearson correlation between pixels will be 
-#' used for clustering instead of Index values. This results in a clustering 
-#' based on different shapes of the dynamic. 
-#' 
-#' @details
-#' The search for the best number of clusters is done by a maximum of 10 000 
-#' pixels, which is assumed to be sufficient. If correlation is done first
-#' those 10 000 pixels are correlated with 1000 pixels of the same data. 
-#' Furthermore, the number of observerations (365 days) is reduced to every 
-#' third day only, to lower process time. This way, correlation should take
-#' less than 10 seconds.
-#' 
-#' 
-#' @return This function plots the improvement values and returns the recommended
-#' number of cluster to use
-#' 
+#' Estimate a suitable number of k-means clusters
+#'
+#' Runs k-means clustering for increasing numbers of clusters and recommends the
+#' largest number that still satisfies a minimum cluster-size criterion. The
+#' decision is based on the proportion of variance explained by the clustering.
+#'
+#' @param pixelDynamic A list or data-frame-like object of pixel-level annual
+#'   dynamics, usually `pixelDynamics` from [dynamic_per_pixel()]. Each pixel is
+#'   expected to contain a 365-day moving-average series.
+#' @param kMax Integer. Maximum number of clusters to test. Default is `10`.
+#' @param minimum_clusterSize Numeric. Minimum allowed cluster size expressed as
+#'   a proportion of all clustered pixels. Default is `0.01`.
+#' @param correlate_first Logical. If `TRUE`, pixels are clustered by their
+#'   correlation profiles rather than by raw index values.
+#'
+#' @return Integer giving the recommended number of clusters. The function also
+#'   draws a diagnostic plot of explained variance by number of clusters.
+#'
+#' @details At most 10,000 pixels are sampled before testing cluster counts. If
+#'   `correlate_first = TRUE`, the selected pixels are correlated with at most
+#'   1,000 reference pixels. See [prepare_for_clustering()] for details on NA
+#'   handling and optional correlation pre-processing.
+#'
 #' @importFrom stats kmeans cor
-#' 
 #' @export
 #' 
 best_nk <- function(
-    pixelDynamic, kMax = 10, minimum_clusterSize = 0.01, plot_result = TRUE, 
+    pixelDynamic, kMax = 10, minimum_clusterSize = 0.01, 
     correlate_first = FALSE
 ){
   y <- prepare_for_clustering(
@@ -79,27 +76,29 @@ best_nk <- function(
   best_nCluster
 }
 
-#' cluster analysis (k-means) and map layer
-#' 
-#' @param pixelDynamic The pixel data table of the output of [dynamic_per_pixel()]
-#' @param nc The netCDF data list created by [open_netcdf()]
-#' @param k The number of Clusters
-#' @param iter.max,nstart Arguments of [kmeans()]
-#' @param correlate_first If TRUE, Pearson correlation between pixels will be 
-#' used for clustering instead of Index values. This results in a clustering 
-#' based on different shapes of the dynamic. 
-#' @param whole_dynamic If TRUE all 365 days average values will be used to 
-#' compare pixels. Otherwise the number of days will be reduced if the number
-#' of pixels is too high (> 100 000).
-#' 
-#' @return A list of the k-means output and a layer of clustered pixels
-#' 
+#' Cluster pixel dynamics with k-means
+#'
+#' Performs k-means clustering on pixel-level moving-average dynamics and returns
+#' cluster assignments, cluster centers, and selected k-means diagnostics.
+#'
+#' @param pixelDynamic A list or data-frame-like object of pixel dynamics,
+#'   usually `pixelDynamics` from [dynamic_per_pixel()].
+#' @param k Integer. Number of clusters.
+#' @param iter.max Integer. Maximum number of k-means iterations.
+#' @param nstart Integer. Number of random starts passed to [stats::kmeans()].
+#' @param correlate_first Logical. If `TRUE`, clustering uses pixel correlation
+#'   profiles instead of raw moving-average values.
+#' @param whole_dynamic Logical. If `FALSE`, the number of days used for
+#'   clustering may be reduced for large pixel sets. If `TRUE`, all 365 days are
+#'   used.
+#'
+#' @return A list with `clusterVector`, `clusterCenter`, `kmeansOut`, and
+#'   `days_included`.
+#'
 #' @importFrom stats kmeans cor
-#' 
 #' @export
-#' 
 pixel_clusters <- function(
-    pixelDynamic, nc, k, iter.max = 20, nstart = 10, correlate_first = FALSE, 
+    pixelDynamic, k, iter.max = 20, nstart = 10, correlate_first = FALSE, 
     whole_dynamic = FALSE
 ){
   
@@ -140,30 +139,30 @@ pixel_clusters <- function(
     "days_included" = keep)
 }
 
-#' Pre-processing done before cluster analysis
-#' 
-#' @param moving_averages_matrix A matrix of p pixels as column and 365 days as
-#' rows of the moving averages of one index as created by [dynamic_per_pixel()]
-#' @param correlate_first If TRUE, Pearson correlation between pixels will be 
-#' used for clustering instead of Index values. This results in a clustering 
-#' based on different shapes of the dynamic.
-#' @param maxPixels The maximum numbers of pixel used for cluster analysis.
-#' Leave NULL to use all pixels.
-#' 
-#' @details
-#' If correlate first, pixels are identified as outliers and removed if there 
-#' not at least 5% other pixels that correlate at least 0.95. For example, given
-#' 1000 correlated pixels, the evaluated pixels is not an outlier if it 
-#' correlates to >= 50 pixels >= 0.95. 
-#' 
-#' 
-#' @return A matrix either with data per pixels or correlation between pixels
-#' used for following cluster analysis
-#' 
+#' Prepare pixel dynamics for clustering
+#'
+#' Cleans and optionally transforms a pixel-by-day moving-average matrix before
+#' k-means clustering.
+#'
+#' @param moving_averages_matrix Matrix or data frame with days as rows and
+#'   pixels as columns. The first column is dropped before processing, matching
+#'   outputs that include a day-of-year column.
+#' @param correlate_first Logical. If `TRUE`, pixels are represented by their
+#'   Pearson correlation with a reference set of pixels.
+#' @param maxPixels Optional integer. Maximum number of pixels to retain. If not
+#'   `NULL`, a reproducible random sample is drawn.
+#'
+#' @return A numeric matrix used as input for clustering. Columns represent
+#'   pixels when `correlate_first = FALSE`; otherwise the matrix contains rounded
+#'   correlation profiles.
+#'
+#' @details Values are rounded with [signif()] before clustering. Depending on
+#'   the NA pattern, the function removes either rows with missing values or
+#'   pixels with missing values and reports removals via warnings. If correlation
+#'   pre-processing is requested, at most 1,000 reference pixels are sampled.
+#'
 #' @importFrom stats cor
-#' 
 #' @export
-#' 
 prepare_for_clustering <- function(
     moving_averages_matrix, correlate_first = FALSE, maxPixels = NULL
 ){

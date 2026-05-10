@@ -2,17 +2,27 @@
 % Please edit documentation in R/dynamic_per_pixel.R
 \name{images_per_ma}
 \alias{images_per_ma}
-\title{Subset of all images to be used for moving averages for each day}
+\title{Identify images used for each moving-average day}
 \usage{
 images_per_ma(t_doy, days_around_ma)
 }
 \arguments{
-\item{t_doy}{Numeric vector of the day of the year according to ts_pixel
-(same length and order)}
+\item{t_doy}{Numeric vector of image days of year, in the same order as the
+image time series.}
 
-\item{days_around_ma}{The days around the moving average day (i.e. 10  means
-10 days before and ten days after the actual day are used for averaging)}
+\item{days_around_ma}{Integer. Half-window size in days.}
+}
+\value{
+A list of length 365. Each element is a logical vector with the same
+length as \code{t_doy}.
 }
 \description{
-Subset of all images to be used for moving averages for each day
+Builds a 365-element list of logical vectors indicating which image dates fall
+within the moving-average window around each day of year.
 }
+\details{
+Windows wrap around the end of the year. The implementation uses
+strict inequalities, so images exactly on the lower or upper window boundary
+are not included.
+}
+\keyword{internal}

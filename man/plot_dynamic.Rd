@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_dynamic.R
 \name{plot_dynamic}
 \alias{plot_dynamic}
-\title{Plot dynamic time series with uncertainty intervals for environmental data}
+\title{Plot annual dynamics with optional uncertainty intervals}
 \usage{
 plot_dynamic(
   v_averageList,
@@ -19,51 +19,44 @@ plot_dynamic(
 )
 }
 \arguments{
-\item{v_averageList}{List of numeric vectors (length 365); medians/averages
-per day of year. Single vectors are automatically wrapped in a list.}
+\item{v_averageList}{Numeric vector or list of numeric vectors with one value
+per day of year.}
 
-\item{v_sdList}{List of numeric vectors (length 365), or NULL. Standard
-deviations per day. Auto-generates \code{df_q50List} (IQR via 0.674 x sd) and
-\code{df_q95List} (1.96 x sd).Single vectors coerced to lists.
-Default: NULL (no uncertainty shading).}
+\item{v_sdList}{Optional numeric vector or list of vectors with standard
+deviations. If supplied, 50\% and 95\% intervals are approximated from the
+standard deviations.}
 
-\item{df_q50List}{List of data.frames (365 rows, 2 cols: "q_0.25", "q_0.75"),
-or NULL/single data.frame.50\% quantile intervals. Takes precedence if both
-quantile lists provided.}
+\item{df_q50List}{Optional data frame or list of data frames with lower and
+upper 50\% interval columns.}
 
-\item{df_q95List}{List of data.frames (365 rows, 2 cols: "q_0.025", "q_0.975"),
-or NULL/single data.frame. 95\% quantile intervals.}
+\item{df_q95List}{Optional data frame or list of data frames with lower and
+upper 95\% interval columns.}
 
-\item{TScolors}{Character vector of colors for time series (default:
-\code{lakeRS::tenClusterColors$color}).Recycled to match \code{v_averageList}
-length.}
+\item{TScolors}{Character vector of colors for the time series and polygons.}
 
-\item{TSnames}{Character vector of names for legend entries (time series),
-or empty string/NULL (no legend). Length should match \code{v_averageList}.}
+\item{TSnames}{Optional character vector of legend names for the time series.}
 
-\item{df_reference}{Data.frame (optional; cols: day 1-365, reference values),
-e.g., ground truth data.}
+\item{df_reference}{Optional two-column data frame with reference day and
+value columns.}
 
-\item{RefName}{Character; legend name for reference line (dashed, black).
-Default: NULL.}
+\item{RefName}{Optional character scalar for the reference-line legend.}
 
-\item{lakeName}{Character; plot title prefix (e.g., lake identifier).
-Default: "".}
+\item{lakeName}{Character scalar used as plot title prefix.}
 
-\item{ylab}{Character; y-axis label (e.g., "Chlorophyll-a Index").
-Default: "Index".}
+\item{ylab}{Character scalar. Y-axis label.}
 
-\item{ylim}{Numeric vector (2 elements); manual y-limits.
-Auto-computed with 10\% padding if NULL.}
+\item{ylim}{Optional numeric vector of length two with y-axis limits.}
 }
 \value{
-Invisible NULL (plots directly; no return value).
-Legend positioned dynamically at top-left.
+No explicit return value. The function draws a base R plot.
 }
 \description{
-Creates a base R plot visualizing multiple time series (medians/averages)
-over 365 days of the year,with optional 50\% and/or 95\% quantile intervals as
-shaded polygons, monthly separators, and an optional reference line
-(e.g., pixel data).
-Auto-generates quantile data.frames from mean/sd.
+Draws one or more 365-day time series and optionally overlays 50\% and 95\%
+interval polygons. The function is designed for lake-level or cluster-level
+dynamics derived from \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}} or \code{\link[=combine_years_dynamic]{combine_years_dynamic()}}.
+}
+\details{
+Month separators and labels are drawn for a non-leap 365-day year.
+Missing interval values are removed with \code{\link[=rm_na_for_polygon]{rm_na_for_polygon()}} before
+polygons are drawn.
 }

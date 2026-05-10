@@ -2,11 +2,10 @@
 % Please edit documentation in R/cluster_analysis.R
 \name{pixel_clusters}
 \alias{pixel_clusters}
-\title{cluster analysis (k-means) and map layer}
+\title{Cluster pixel dynamics with k-means}
 \usage{
 pixel_clusters(
   pixelDynamic,
-  nc,
   k,
   iter.max = 20,
   nstart = 10,
@@ -15,25 +14,27 @@ pixel_clusters(
 )
 }
 \arguments{
-\item{pixelDynamic}{The pixel data table of the output of \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}}
+\item{pixelDynamic}{A list or data-frame-like object of pixel dynamics,
+usually \code{pixelDynamics} from \code{\link[=dynamic_per_pixel]{dynamic_per_pixel()}}.}
 
-\item{nc}{The netCDF data list created by \code{\link[=open_netcdf]{open_netcdf()}}}
+\item{k}{Integer. Number of clusters.}
 
-\item{k}{The number of Clusters}
+\item{iter.max}{Integer. Maximum number of k-means iterations.}
 
-\item{iter.max, nstart}{Arguments of \code{\link[=kmeans]{kmeans()}}}
+\item{nstart}{Integer. Number of random starts passed to \code{\link[stats:kmeans]{stats::kmeans()}}.}
 
-\item{correlate_first}{If TRUE, Pearson correlation between pixels will be
-used for clustering instead of Index values. This results in a clustering
-based on different shapes of the dynamic.}
+\item{correlate_first}{Logical. If \code{TRUE}, clustering uses pixel correlation
+profiles instead of raw moving-average values.}
 
-\item{whole_dynamic}{If TRUE all 365 days average values will be used to
-compare pixels. Otherwise the number of days will be reduced if the number
-of pixels is too high (> 100 000).}
+\item{whole_dynamic}{Logical. If \code{FALSE}, the number of days used for
+clustering may be reduced for large pixel sets. If \code{TRUE}, all 365 days are
+used.}
 }
 \value{
-A list of the k-means output and a layer of clustered pixels
+A list with \code{clusterVector}, \code{clusterCenter}, \code{kmeansOut}, and
+\code{days_included}.
 }
 \description{
-cluster analysis (k-means) and map layer
+Performs k-means clustering on pixel-level moving-average dynamics and returns
+cluster assignments, cluster centers, and selected k-means diagnostics.
 }

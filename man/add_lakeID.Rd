@@ -2,29 +2,26 @@
 % Please edit documentation in R/seasonal_index_per_lake.R
 \name{add_lakeID}
 \alias{add_lakeID}
-\title{Add Lake Identifier and Name to Lake Index List}
+\title{Add lake name and identifier to a lake index result}
 \usage{
 add_lakeID(lakeIndex, lakeName = NULL, lakeID = NULL)
 }
 \arguments{
-\item{lakeIndex}{A list produced by \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}, containing elements such as
-\code{x}, \code{y}, and lake-specific index information.}
+\item{lakeIndex}{A list containing lake-level index results and at least the
+coordinate vectors \code{x} and \code{y}. Typically the list is produced internally by
+\code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}.}
 
-\item{lakeName}{Character string specifying the name of the lake.
-Defaults to \code{NULL}, which assigns \code{NA}.}
+\item{lakeName}{Optional character scalar with the lake name. If \code{NULL}, the
+output element \code{Name} is set to \code{NA}.}
 
-\item{lakeID}{Character string specifying a unique identifier for the lake.
-Defaults to \code{NULL}, which triggers automatic generation in the format
-\code{"<mean_x>_<mean_y>"} coordinate.}
+\item{lakeID}{Optional character scalar with a unique lake identifier. If
+\code{NULL}, the identifier is generated as \code{"<mean(x)>_<mean(y)>"}.}
 }
 \value{
-The same \code{lakeIndex} list with two additional elements:
-\describe{
-\item{\code{Name}}{The assigned lake name (character or \code{NA}).}
-\item{\code{ID}}{The lake identifier (character).}
-}
+The input list with two additional elements: \code{Name} and \code{ID}.
 }
 \description{
-This function appends lake identification information (a unique ID and/or name)
-to a list object created by \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}.
+Adds a human-readable lake name and a stable lake identifier to a list created
+by \code{\link[=seasonal_index_per_lake]{seasonal_index_per_lake()}}. If no identifier is supplied, an identifier is
+generated from the mean x and y coordinates of the lake grid.
 }

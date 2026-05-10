@@ -1,37 +1,32 @@
-#' Leaflet Map one layer (Matrix) described by a netCDF
-#' 
-#' The plot is the layer on top of a leaflet map. The color scheme can
-#' be done for numeric or categorical values.
-#' 
-#' @param ncLayer This is a layer that corresponds to the x and y dimensions of
-#' the netCDF file. It can be a band of netCDF or further processed layer
-#' created by [waterscene_proportion()]
-#' @param nc The netCDF data list created by [open_netcdf()]
-#' @param lowerLimits Lower limits of value classes. If NULL (default) 
-#' numerical values will be used.
-#' @param highestValue If Null the highest value is derived by the maximum of
-#' all available layer values. It can also be specified manually.
-#' @param classColors A vector of R-colors names corresponding to the value
-#' classes. 
-#' @param valueRange Minimum and maximum values used for color scale of numeric 
-#' values.
-#' @param legendTitle Character string for legend title
-#' @param plotLegend If TRUE legend will be plotted. If now lowerLimits and no
-#' valueRange are spefecied. No legend will be plotted.
-#' 
-#' @details
-#' Use case: Proportions of a scene.
-#' The above values and correspoding colors need to be specified. If for example 
-#' values between 0 and 0.5 (50%) should bewhite, values between 0.5 and 0.75 
-#' should be yellow and values above 0.75 should be purple, lowerLimits are 
-#' c(0, 0.5, 0.75) and the classColors arec("white", "yellow", "purple"). 
-#' In that case a legendTitle is recommended to explain what is displayed.
-#' 
-#' 
-#' 
+#' Display a netCDF-aligned matrix as an interactive leaflet layer
+#'
+#' Reprojects a matrix aligned with an [open_netcdf()] object to WGS 84 and adds
+#' it as a raster overlay on an interactive leaflet map.
+#'
+#' @param ncLayer Matrix with the same row and column dimensions as the netCDF
+#'   grid. Values can be numeric classes, continuous numeric values, or hex color
+#'   strings.
+#' @param nc A list returned by [open_netcdf()]. Used for coordinates and CRS.
+#' @param lowerLimits Optional numeric vector of lower class limits. If supplied,
+#'   categorical intervals are created with [cut()].
+#' @param highestValue Optional numeric upper bound appended to `lowerLimits`.
+#'   If `NULL`, the maximum layer value is used.
+#' @param classColors Character vector of colors corresponding to the classes
+#'   defined by `lowerLimits`.
+#' @param valueRange Optional numeric vector of length two for continuous color
+#'   scaling.
+#' @param legendTitle Optional character scalar used as legend title.
+#' @param plotLegend Logical. If `TRUE`, a leaflet legend is added when enough
+#'   information is available.
+#'
+#' @return A `leaflet` map object.
+#'
+#' @details The function supports a hex-color mode when all values of `ncLayer`
+#'   are character strings beginning with `#`.
+#'
 #' @importFrom terra rast values ext
-#' @importFrom leaflet colorFactor colorNumeric leaflet setView addTiles addRasterImage addLegend
-#' 
+#' @importFrom leaflet colorFactor colorNumeric leaflet fitBounds addProviderTiles addRasterImage addLegend
+#' @importFrom grDevices col2rgb rgb
 #' @export
 #' 
 map_layer <- function(
@@ -63,9 +58,10 @@ map_layer <- function(
       extent = c(min(nc$x), max(nc$x), min(nc$y), max(nc$y)),
       crs    = nc$crs), 
     finalCRS = "EPSG:4326")
+  v <- terra::values(r_wgs84)
   
   if(hexValues){
-    r_factor <- as.factor(terra::values(r_wgs84))
+    r_factor <- factor(v, exclude = c(NA, NaN))
     terra::values(r_wgs84) <- r_factor
     pal <- leaflet::colorFactor(palette = as.vector(COLOR), 
                                 domain = seq_along(levels(r_factor)), 
@@ -86,6 +82,7 @@ map_layer <- function(
       opacity = 0.8
     )
   } else {
+    foundLevels <- sort(unique(v[!is.na(v)]))
     if(!is.null(lowerLimits)){
       if(is.null(highestValue)){
         highestValue <- max(terra::values(r_wgs84), na.rm = TRUE)
@@ -93,20 +90,27 @@ map_layer <- function(
           highestValue <- NULL
         }
       }
-      cuts <- c(lowerLimits, highestValue) #set breaks
-      r_factor <- cut(
-        x = terra::values(r_wgs84), 
-        breaks = cuts, 
-        right = TRUE, 
-        include.lowest = TRUE
-      )
+      if(all(foundLevels %in% lowerLimits)){ # already classes -> as factor
+        r_factor <- factor(v, exclude = c(NA,NaN))
+      } else {
+        cuts <- c(lowerLimits, highestValue) #set breaks
+        r_factor <- cut(
+          x = terra::values(r_wgs84), 
+          breaks = cuts, 
+          right = TRUE, 
+          include.lowest = TRUE
+        )
+      }
       terra::values(r_wgs84) <- r_factor
-      hexCols <- apply(col2rgb(classColors), MARGIN = 2, function(co){
+     
+     
+      hexCols <- apply(col2rgb(classColors)[,seq_along(levels(r_factor))], MARGIN = 2, function(co){
         rgb(red = co[1], green = co[2], blue = co[3], alpha = 0, maxColorValue = 255)
       })
       palData  <- leaflet::colorFactor(palette = hexCols, 
                                        domain = seq_along(levels(r_factor)), 
                                        na.color = "#00000000")
+      
       palLegend <- leaflet::colorFactor(palette = hexCols, 
                                         domain = r_factor, 
                                         na.color = "#00000000")
@@ -116,7 +120,7 @@ map_layer <- function(
         valueRange <- valueRange + (diff(valueRange) * c(-0.00001, 0.00001))
         plotLegend <- FALSE
       }
-      pal <- leaflet::colorNumeric(
+      palData <- palLegend <- leaflet::colorNumeric(
         palette = c("white", "black"), 
         domain = valueRange)
     }
@@ -151,7 +155,7 @@ map_layer <- function(
       } else {
         m <- leaflet::addLegend(
           map = m, 
-          pal = pal, 
+          pal = palLegend, 
           values = c(valueRange[1], mean(valueRange), valueRange[2]),
           title = legendTitle)
       }
@@ -160,41 +164,34 @@ map_layer <- function(
   m
 }
 
-
-
-#' Plot one layer (Matrix) described by a netCDF
-#' 
-#' The plot is the layer on top of a leaflet map. The color scheme can
-#' be done for numeric or categorical values.
-#' 
-#' @param ncLayer This is a matrix that corresponds to the x and y dimensions of
-#' the netCDF file. It can be a band of netCDF or further processed layer. It
-#' contant of the matrix can either be numerical or characters of hex colors.
-#' @param nc The netCDF data list created by [open_netcdf()]
-#' @param lowerLimits Lower limits of value classes. If NULL (default) colors
-#' will be scaled according to numerical values. 
-#' @param highestValue If Null the highest value is derived by the maximum of
-#' all available layer values. It can also be specified manually.
-#' @param classColors A vector of R-colors names corresponding to the value
-#' classes. 
-#' @param valueRange Minimum and maximum values used for color scale of numeric 
-#' values.
-#' @param legendTitle Character string for legend title
-#' @param plotLegend If TRUE legend will be plotted. If no lowerLimits and no
-#' valueRange are specefied. No legend will be plotted.
-#' 
-#' @details
-#' Use case: Proportions of a scene.
-#' The above values and correspoding colors need to be specified. If for example 
-#' values between 0 and 0.5 (50%) should bewhite, values between 0.5 and 0.75 
-#' should be yellow and values above 0.75 should be purple, lowerLimits are 
-#' c(0, 0.5, 0.75) and the classColors arec("white", "yellow", "purple"). 
-#' In that case a legendTitle is recommended to explain what is displayed.
-#' 
+#' Plot a netCDF-aligned matrix as a static map
+#'
+#' Reprojects a matrix aligned with a netCDF grid to WGS 84 and plots it with a
+#' distance scale and optional legend using base graphics.
+#'
+#' @param ncLayer Matrix with the same row and column dimensions as the netCDF
+#'   grid. Values can be numeric or hex color strings.
+#' @param nc A list returned by [open_netcdf()]. Used for coordinates and CRS.
+#' @param lowerLimits Optional numeric vector of class lower limits.
+#' @param classColors Character vector of colors for classes. In continuous mode
+#'   without `valueRange`, defaults internally to `c("white", "black")`.
+#' @param highestValue Optional upper bound for the last class.
+#' @param valueRange Optional numeric vector of length two for continuous value
+#'   scaling.
+#' @param legendTitle Optional character scalar used as legend title.
+#' @param plotLegend Logical. If `TRUE`, a legend is plotted when class labels
+#'   are available.
+#'
+#' @return No explicit return value. The function draws a base R plot.
+#'
+#' @details The plot is scaled according to geodesic width and height estimated
+#'   with [geosphere::distGeo()]. The helper [plot_scale()] adjusts the plot
+#'   region to preserve the map's aspect ratio.
+#'
 #' @importFrom terra rast values ext image
-#' @importFrom graphics arrows
+#' @importFrom graphics arrows legend par text
+#' @importFrom grDevices col2rgb rgb
 #' @importFrom geosphere distGeo
-#' 
 #' @export
 #' 
 plot_layer <- function(
@@ -229,42 +226,55 @@ plot_layer <- function(
       extent = c(min(nc$x), max(nc$x), min(nc$y), max(nc$y)),
       crs    = nc$crs), 
     finalCRS = "EPSG:4326")
+  v <- terra::values(r_wgs84)
   
-  if(hexValues){
-    r_factor <- as.factor(terra::values(r_wgs84))
+  if(hexValues){ # Already colors -> nothing else needed
+    r_factor <- as.factor(v)
     terra::values(r_wgs84) <- r_factor
     pal <- leaflet::colorFactor(palette = as.vector(COLOR), 
                                 domain = seq_along(levels(r_factor)), 
                                 na.color = "#00000000")
     
   } else {
+    foundLevels <- sort(unique(v[!is.na(v)]))
     if(!is.null(lowerLimits)){
       if(is.null(highestValue)){
-        highestValue <- max(terra::values(r_wgs84), na.rm = TRUE)
+        highestValue <- max(v, na.rm = TRUE)
         if(highestValue <= max(lowerLimits)){
           highestValue <- NULL
         }
       }
-      cuts <- c(lowerLimits, highestValue) #set breaks
-      
-      LegendText <- levels(cut(
-        x = 0, 
-        breaks = cuts, 
-        include.lowest = TRUE))
-    } else {
+      if(all(foundLevels %in% lowerLimits)){ # already classes -> as factor
+        LegendText <- foundLevels
+        terra::values(r_wgs84)[!is.na(v)] <- factor(v[!is.na(v)])
+      } else { # numeric data -> derive classes 
+        cuts <- c(lowerLimits, highestValue) 
+        LegendText <- levels(cut(
+          x = 0, 
+          breaks = cuts, 
+          include.lowest = TRUE))
+        terra::values(r_wgs84) <- cut(
+          x = as.numeric(v), 
+          breaks = cuts, 
+          include.lowest = TRUE)
+        foundLevels <- sort(unique(
+          terra::values(r_wgs84)[!is.na(terra::values(r_wgs84))]
+        ))
+      }
+    } else { 
       if(is.null(valueRange)){
-        valueRange <- range(terra::values(r_wgs84), na.rm = TRUE)
+        valueRange <- range(v, na.rm = TRUE)
         valueRange <- valueRange + (diff(valueRange) * c(-0.00001, 0.00001))
         cuts <- valueRange
         plotLegend <- FALSE
         classColors <- c("white", "black")
       }
+      terra::values(r_wgs84) <- cut(
+        x = as.numeric(terra::values(r_wgs84)), 
+        breaks = cuts, 
+        include.lowest = TRUE)
+      foundLevels <- c(1,2)
     }
-    terra::values(r_wgs84) <- cut(
-      x = as.numeric(terra::values(r_wgs84)), 
-      breaks = cuts, 
-      include.lowest = TRUE)
-    foundLevels <- unique(terra::values(r_wgs84))
     
   }
   
@@ -300,11 +310,14 @@ plot_layer <- function(
        labels = paste0(signif(y_meters / 1000, 2), " km"), pos = 4)
   
   if(plotLegend){
+    if(length(foundLevels) > 15){
+      foundLevels <- pretty(foundLevels, n = 15)
+    }
     legend(
       x =  par("usr")[2] + diff(par("usr")[1:2]) / diff(par("plt")[1:2]) * (1 - par("plt")[2]),
       y =  par("usr")[4] + diff(par("usr")[3:4]) / diff(par("plt")[3:4]) * (1 - par("plt")[4]), 
-      legend = LegendText, 
-      fill = classColors, 
+      legend = LegendText[foundLevels], 
+      fill = classColors[foundLevels], 
       bg = rgb(1,1,1, 0.5),
       title = legendTitle, 
       box.col = rgb(1,1,1, 0.5), 
@@ -315,16 +328,24 @@ plot_layer <- function(
   }
 }
 
-#' Define plot region scale
-#' @param pin_w widthsize 
-#' @param pin_h hightsize
+#' Adjust base-graphics plot size to a target aspect ratio
+#'
+#' Sets the graphics parameters `pin` and `mai` so that a plot region matches a
+#' target width-to-height ratio while remaining centered in the device.
+#'
+#' @param pin_w Numeric scalar. Relative target width.
+#' @param pin_h Numeric scalar. Relative target height.
+#'
+#' @return The result of [graphics::par()] is returned invisibly by `par()`.
+#'
+#' @details If the current graphics device is too small to accommodate the
+#'   requested region, a new device is opened and the scaling is recalculated.
+#'
+#' @keywords internal
 #' 
-#' @details
-#' both values will be treated relatively and will adjust the plot margin to 
-#' the device size
-#' 
-#' 
-plot_scale <- function(pin_w, pin_h) {
+plot_scale <- function(
+    pin_w, pin_h)
+{
   din <- par("din")  # Device-size in inch
   scale_w <- din[1] / pin_w
   scale_h <- din[2] / pin_h
@@ -348,3 +369,4 @@ plot_scale <- function(pin_w, pin_h) {
   }
   par(pin = c(pin_w_s, pin_h_s), mai = mai)
 }
+

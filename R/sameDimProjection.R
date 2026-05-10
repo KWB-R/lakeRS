@@ -1,34 +1,27 @@
-#' Project a raster to a new CRS while preserving its row and column dimensions
+#' Reproject a raster while preserving row and column counts
 #'
-#' This function reprojects an input raster to a specified target coordinate reference system (CRS),
-#' preserving the original number of rows and columns. The spatial extent of the raster is transformed
-#' to the new CRS, and a new raster template is created to match these dimensions before projection.
+#' Reprojects a terra input raster to a specified target coordinate reference 
+#' system (CRS), preserving the original number of rows and columns. The spatial 
+#' extent of the raster is transformed to the new CRS, and a new raster template 
+#' is created to match these dimensions before projection.
 #'
-#' @param initial_raster A `SpatRaster` object to be projected.
+#' @param initial_raster A `terra::SpatRaster` object.
 #' @param finalCRS Character string specifying the target CRS, in `EPSG` or WKT format. 
 #' Default is `"EPSG:4326"`.
 #'
 #' @return A `SpatRaster` object reprojected to the specified CRS, maintaining the same
-#' number of rows and columns as the input raster.
+#'   number of rows and columns as the input raster.
 #'
-#' @details
-#' The function first projects the spatial extent of the input raster to the target CRS,
-#' then constructs a raster template with matching dimensions. The projection uses nearest-neighbor
-#' resampling (`method = "near"`). This can be useful for categorical or discrete data where
-#' interpolation should be avoided.
-#'
-#' @examples
-#' \dontrun{
-#' library(terra)
-#' r <- rast(system.file("ex/elev.tif", package = "terra"))
-#' r_proj <- sameDimProjection(r, finalCRS = "EPSG:3857")
-#' plot(r_proj)
-#' }
+#' @details The input extent is projected to the target CRS and used to create a
+#'   template raster. Projection uses nearest-neighbor resampling (`method =
+#'   "near"`), which is appropriate for categorical layers and avoids creating
+#'   interpolated class values.
 #'
 #' @seealso [terra::project()], [terra::rast()], [terra::ext()]
 #'
 #' @importFrom terra project ext crs rast
 #' @export
+#' 
 sameDimProjection <- function(
     initial_raster, finalCRS = "EPSG:4326"
 ){
